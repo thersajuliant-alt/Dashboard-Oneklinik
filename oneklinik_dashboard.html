@@ -123,9 +123,12 @@ td.muted{color:var(--muted)}
 .empty-icon{font-size:28px;margin-bottom:8px}
 
 /* LEGEND */
-.legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:4px}
-.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
-.legend-dot{width:8px;height:8px;border-radius:50%}
+.legend{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;padding:5px 10px;border-radius:99px;border:1px solid var(--border);transition:all 0.15s;user-select:none}
+.legend-item:hover{border-color:var(--border2);color:var(--text)}
+.legend-item.active{color:var(--text);border-color:var(--border2);background:var(--surface2)}
+.legend-item.inactive{opacity:0.35}
+.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -446,9 +449,9 @@ function render1HC() {
   if (tahun)  data = data.filter(r => r.tahun === tahun);
 
   filteredData['1hc'] = data;
+  activeKats['1hc'] = new Set();
   renderStats('1hc', data);
-  renderChart('1hc', data);
-  renderTable('1hc', data);
+  renderChartAndTable('1hc');
 }
 
 // ── Homecare render ───────────────────────────────────────────
@@ -461,9 +464,9 @@ function renderHomecare() {
   if (tahun) data = data.filter(r => r.tahun === tahun);
 
   filteredData['homecare'] = data;
+  activeKats['homecare'] = new Set();
   renderStats('homecare', data);
-  renderChart('homecare', data);
-  renderTable('homecare', data);
+  renderChartAndTable('homecare');
 }
 
 // ── Price Dashboard render ────────────────────────────────────
@@ -542,7 +545,26 @@ function renderStats(tab, data) {
 }
 
 // ── Shared: Chart ─────────────────────────────────────────────
-function renderChart(tab, data) {
+// Active kategori per tab
+const activeKats = { '1hc': new Set(), 'homecare': new Set() };
+
+function toggleKat(tab, kat) {
+  const active = activeKats[tab];
+  if (active.has(kat)) { active.delete(kat); } else { active.add(kat); }
+  renderChartAndTable(tab);
+}
+
+function renderChartAndTable(tab) {
+  const baseData = filteredData[tab] || [];
+  const active = activeKats[tab];
+  const filtered = active.size > 0 ? baseData.filter(r => active.has(r.kat)) : baseData;
+  renderChart(tab, baseData, active);
+  renderTable(tab, filtered);
+  const countEl = document.getElementById('count-' + tab);
+  if (countEl) countEl.textContent = filtered.length + ' rows';
+}
+
+function renderChart(tab, data, activeSet) {
   // Group by bulan
   const bulanMap = {};
   data.forEach(r => {
@@ -554,15 +576,19 @@ function renderChart(tab, data) {
   const sorted = Object.entries(bulanMap).sort((a,b) => a[1].bulanSort - b[1].bulanSort);
   const labels = sorted.map(([b]) => b);
   const catKeys = ['suntik','infus','vaksin','konsultasi','other'];
+  const active = activeSet || new Set();
 
-  const datasets = catKeys.map(k => ({
-    label: CATS[k].label,
-    data: sorted.map(([,v]) => v[k] || 0),
-    backgroundColor: CATS[k].color + 'CC',
-    borderColor: CATS[k].color,
-    borderWidth: 1,
-    borderRadius: 3
-  }));
+  const datasets = catKeys.map(k => {
+    const isActive = active.size === 0 || active.has(k);
+    return {
+      label: CATS[k].label,
+      data: sorted.map(([,v]) => v[k] || 0),
+      backgroundColor: isActive ? CATS[k].color + 'CC' : CATS[k].color + '22',
+      borderColor: isActive ? CATS[k].color : CATS[k].color + '44',
+      borderWidth: 1,
+      borderRadius: 3
+    };
+  });
 
   const canvasId = 'chart-' + tab;
   if (charts[tab]) { charts[tab].destroy(); }
@@ -578,16 +604,20 @@ function renderChart(tab, data) {
         tooltip: { backgroundColor: '#212120', titleColor: '#F0EDE6', bodyColor: '#7A7872', borderColor: '#2E2E2C', borderWidth: 1 }
       },
       scales: {
-        x: { stacked: true, ticks: { color: '#7A7872', font: { size: 11, family: 'DM Mono' } }, grid: { color: '#2E2E2C' } },
-        y: { stacked: true, ticks: { color: '#7A7872', font: { size: 11 } }, grid: { color: '#2E2E2C' } }
+        x: { stacked: false, ticks: { color: '#7A7872', font: { size: 11, family: 'DM Mono' } }, grid: { color: '#2E2E2C' } },
+        y: { stacked: false, ticks: { color: '#7A7872', font: { size: 11 } }, grid: { color: '#2E2E2C' } }
       }
     }
   });
 
   // Legend
-  document.getElementById('legend-' + tab).innerHTML = catKeys.map(k =>
-    `<div class="legend-item"><div class="legend-dot" style="background:${CATS[k].color}"></div>${CATS[k].label}</div>`
-  ).join('');
+  document.getElementById('legend-' + tab).innerHTML = catKeys.map(k => {
+    const isActive = active.size === 0 || active.has(k);
+    const cls = active.size === 0 ? '' : (isActive ? 'active' : 'inactive');
+    return `<div class="legend-item ${cls}" onclick="toggleKat('${tab}','${k}')">
+      <div class="legend-dot" style="background:${CATS[k].color}"></div>${CATS[k].label}
+    </div>`;
+  }).join('');
 }
 
 // ── Shared: Table ─────────────────────────────────────────────
