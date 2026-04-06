@@ -3,255 +3,513 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>OneKlinik Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet"/>
+<title>OneKlinik Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0F0F0D;
-  --surface:#181816;
-  --surface2:#212120;
-  --surface3:#2A2A28;
-  --border:#2E2E2C;
-  --border2:#3A3A38;
-  --text:#F0EDE6;
-  --muted:#7A7872;
-  --muted2:#5A5852;
-  --accent:#C8F560;
-  --accent-dim:#8FB33A;
-  --accent2:#F5A623;
-  --teal:#4ECDC4;
-  --coral:#FF6B6B;
-  --violet:#A78BFA;
-  --pink:#F472B6;
-  --radius:12px;
+  --navy:#0D1B2A;
+  --navy2:#142233;
+  --navy3:#1C3050;
+  --navy4:#243B55;
+  --border:#2A4060;
+  --border2:#345070;
+  --text:#E8EFF8;
+  --text2:#8BA5C0;
+  --text3:#5A7A9A;
+  --green:#00C48C;
+  --green-d:#00A878;
+  --green-bg:rgba(0,196,140,0.1);
+  --blue:#4A9EFF;
+  --blue-bg:rgba(74,158,255,0.1);
+  --amber:#FFB84A;
+  --amber-bg:rgba(255,184,74,0.1);
+  --red:#FF6B6B;
+  --red-bg:rgba(255,107,107,0.1);
+  --purple:#A78BFA;
+  --purple-bg:rgba(167,139,250,0.1);
+  --teal:#2DD4BF;
+  --teal-bg:rgba(45,212,191,0.1);
+  --r:10px;
 }
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5}
+html,body{font-family:'Inter',sans-serif;background:var(--navy);color:var(--text);min-height:100vh;font-size:14px;-webkit-font-smoothing:antialiased}
 
-/* UPLOAD SCREEN */
-#uploadScreen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px}
-.upload-brand{font-family:'Syne',sans-serif;font-size:28px;font-weight:700;letter-spacing:-0.5px;margin-bottom:6px}
-.upload-brand span{color:var(--accent)}
-.upload-sub{color:var(--muted);font-size:14px;margin-bottom:48px}
-.upload-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;width:100%;max-width:800px;margin-bottom:32px}
-.upload-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden}
-.upload-card:hover{border-color:var(--border2);background:var(--surface2)}
-.upload-card.loaded{border-color:var(--accent);background:rgba(200,245,96,0.05)}
-.upload-card-icon{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;font-size:18px}
-.icon-emr{background:rgba(78,205,196,0.15);color:var(--teal)}
-.icon-price{background:rgba(200,245,96,0.15);color:var(--accent)}
-.icon-payer{background:rgba(245,166,35,0.15);color:var(--accent2)}
-.upload-card-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:600;margin-bottom:4px}
-.upload-card-desc{font-size:12px;color:var(--muted);line-height:1.5}
-.upload-card-status{font-size:11px;margin-top:10px;font-weight:500}
-.status-waiting{color:var(--muted2)}
-.status-loaded{color:var(--accent)}
-.upload-card input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
-.launch-btn{background:var(--accent);color:#0F0F0D;border:none;padding:14px 40px;border-radius:99px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:0.3px;transition:all 0.2s;opacity:0.3;pointer-events:none}
-.launch-btn.ready{opacity:1;pointer-events:all}
-.launch-btn.ready:hover{background:#d4ff6a;transform:scale(1.02)}
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--navy2)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 
-/* APP */
+/* ════════════════════════════
+   UPLOAD SCREEN
+════════════════════════════ */
+#upload{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:40px 20px;
+  background:radial-gradient(ellipse at 30% 20%,rgba(74,158,255,0.06) 0%,transparent 60%),
+             radial-gradient(ellipse at 70% 80%,rgba(0,196,140,0.05) 0%,transparent 60%),
+             var(--navy);
+}
+.up-wrap{width:100%;max-width:520px}
+.up-logo{display:flex;align-items:center;gap:10px;margin-bottom:36px}
+.up-logo-mark{width:36px;height:36px;background:linear-gradient(135deg,var(--green),var(--blue));border-radius:10px;display:flex;align-items:center;justify-content:center}
+.up-logo-mark svg{width:18px;height:18px;stroke:white;fill:none;stroke-width:2.5;stroke-linecap:round}
+.up-logo-text{font-size:18px;font-weight:700;letter-spacing:-0.3px}
+.up-logo-text span{color:var(--green)}
+.up-h{font-size:34px;font-weight:700;letter-spacing:-0.8px;line-height:1.1;margin-bottom:10px}
+.up-h span{background:linear-gradient(135deg,var(--blue),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.up-sub{color:var(--text2);font-size:14px;line-height:1.6;margin-bottom:36px}
+
+/* Price saved banner */
+.price-banner{
+  background:var(--green-bg);border:1px solid rgba(0,196,140,0.3);
+  border-radius:var(--r);padding:12px 16px;margin-bottom:20px;
+  display:none;align-items:center;justify-content:space-between;gap:12px;
+}
+.price-banner.show{display:flex}
+.price-banner-left{display:flex;align-items:center;gap:8px}
+.price-banner-dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
+.price-banner-info{font-size:13px}
+.price-banner-title{font-weight:600;color:var(--green)}
+.price-banner-sub{font-size:11px;color:var(--text2);margin-top:1px}
+.price-banner-reset{font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;font-family:inherit;text-decoration:underline;white-space:nowrap}
+.price-banner-reset:hover{color:var(--text2)}
+
+.up-files{display:flex;flex-direction:column;gap:8px;margin-bottom:24px}
+.up-file{
+  display:flex;align-items:center;gap:14px;
+  background:var(--navy2);border:1px solid var(--border);
+  border-radius:var(--r);padding:14px 16px;
+  cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;
+}
+.up-file:hover{border-color:var(--border2);background:var(--navy3)}
+.up-file.done{border-color:rgba(0,196,140,0.4);background:var(--green-bg)}
+.up-file input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.up-file-num{
+  width:30px;height:30px;border-radius:50%;
+  background:var(--navy3);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;color:var(--text2);flex-shrink:0;transition:all 0.2s;
+}
+.up-file.done .up-file-num{background:var(--green);border-color:var(--green);color:var(--navy)}
+.up-file-info{flex:1;min-width:0}
+.up-file-title{font-size:14px;font-weight:600;color:var(--text)}
+.up-file-desc{font-size:12px;color:var(--text3);margin-top:2px}
+.up-file-tag{font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px;margin-left:6px;vertical-align:middle}
+.tag-weekly{background:var(--amber-bg);color:var(--amber)}
+.tag-once{background:var(--green-bg);color:var(--green)}
+.up-file-status{font-size:12px;color:var(--text3);white-space:nowrap;font-weight:500}
+.up-file.done .up-file-status{color:var(--green)}
+
+.up-btn{
+  width:100%;padding:14px;
+  background:linear-gradient(135deg,var(--green-d),var(--blue));
+  color:white;border:none;border-radius:var(--r);
+  font-family:inherit;font-size:14px;font-weight:700;
+  cursor:pointer;transition:all 0.2s;
+  opacity:0.3;pointer-events:none;letter-spacing:0.3px;
+}
+.up-btn.on{opacity:1;pointer-events:all}
+.up-btn.on:hover{opacity:0.9;transform:translateY(-1px)}
+
+/* ════════════════════════════
+   APP
+════════════════════════════ */
 #app{display:none;min-height:100vh;flex-direction:column}
 
-/* HEADER */
-.header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:100}
-.brand{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;letter-spacing:-0.3px}
-.brand span{color:var(--accent)}
-.header-right{display:flex;align-items:center;gap:8px}
-.reset-btn{background:none;border:1px solid var(--border);border-radius:7px;padding:6px 12px;font-family:inherit;font-size:12px;color:var(--muted);cursor:pointer;transition:all 0.15s}
-.reset-btn:hover{border-color:var(--border2);color:var(--text)}
+/* TOPBAR */
+.topbar{
+  background:var(--navy2);border-bottom:1px solid var(--border);
+  height:52px;padding:0 24px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;
+}
+.t-logo{display:flex;align-items:center;gap:8px}
+.t-mark{width:26px;height:26px;background:linear-gradient(135deg,var(--green),var(--blue));border-radius:7px;display:flex;align-items:center;justify-content:center}
+.t-mark svg{width:13px;height:13px;stroke:white;fill:none;stroke-width:2.5;stroke-linecap:round}
+.t-name{font-size:14px;font-weight:700;letter-spacing:-0.2px}
+.t-name span{color:var(--green)}
+.t-right{display:flex;align-items:center;gap:8px}
+.t-period{font-size:11px;color:var(--text3);background:var(--navy3);border:1px solid var(--border);padding:4px 10px;border-radius:99px}
+.t-back{font-size:12px;color:var(--text2);background:none;border:1px solid var(--border);border-radius:7px;padding:5px 12px;cursor:pointer;font-family:inherit;transition:all 0.15s}
+.t-back:hover{border-color:var(--border2);color:var(--text)}
 
 /* NAV */
-.nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;gap:2px}
-.nav-tab{padding:12px 18px;font-size:13px;font-weight:500;color:var(--muted);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.15s;font-family:'Syne',sans-serif;letter-spacing:0.2px}
-.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
-.nav-tab:hover:not(.active){color:var(--text)}
+.nav{
+  background:var(--navy2);border-bottom:1px solid var(--border);
+  padding:0 24px;display:flex;gap:0;
+}
+.ntab{
+  padding:13px 20px;font-size:13px;font-weight:500;
+  color:var(--text3);border:none;background:none;cursor:pointer;
+  border-bottom:2px solid transparent;margin-bottom:-1px;
+  font-family:inherit;transition:all 0.15s;
+}
+.ntab.on{color:var(--text);border-bottom-color:var(--green)}
+.ntab:hover:not(.on){color:var(--text2)}
 
 /* MAIN */
-.main{padding:24px;flex:1}
-.page{display:none}
-.page.active{display:block}
+.main{padding:24px;max-width:1400px}
+.pg{display:none}.pg.on{display:block}
 
-/* FILTERS */
-.filter-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;align-items:flex-end}
-.filter-group{display:flex;flex-direction:column;gap:4px}
-.filter-label{font-size:10px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:0.8px}
-.filter-group select{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-family:inherit;font-size:13px;color:var(--text);outline:none;min-width:150px;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237A7872' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
-.filter-group select:focus{border-color:var(--accent)}
-.filter-reset{background:none;border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-family:inherit;font-size:12px;color:var(--muted);cursor:pointer;align-self:flex-end;transition:all 0.15s}
-.filter-reset:hover{color:var(--text);border-color:var(--border2)}
+/* ── FILTERS ── */
+.fbar{
+  display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;
+  margin-bottom:20px;
+}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--text3)}
+.fg select{
+  background:var(--navy2);border:1px solid var(--border);
+  border-radius:7px;padding:7px 28px 7px 10px;
+  font-family:inherit;font-size:12px;color:var(--text);
+  outline:none;min-width:145px;cursor:pointer;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%235A7A9A' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;
+  transition:border-color 0.15s;
+}
+.fg select:focus{border-color:var(--green);outline:none}
+.freset{
+  background:none;border:1px solid var(--border);border-radius:7px;
+  padding:7px 14px;font-family:inherit;font-size:12px;
+  color:var(--text2);cursor:pointer;align-self:flex-end;transition:all 0.15s;
+}
+.freset:hover{color:var(--text);border-color:var(--border2)}
 
-/* STAT CARDS */
-.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px}
-.stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px}
-.stat-value{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.5px;color:var(--text)}
-.stat-value.accent{color:var(--accent)}
-.stat-sub{font-size:11px;color:var(--muted);margin-top:3px}
+/* ── STAT CARDS ── */
+.srow{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px;margin-bottom:20px}
+.sc{
+  background:var(--navy2);border:1px solid var(--border);
+  border-radius:var(--r);padding:16px 18px;
+  position:relative;overflow:hidden;transition:border-color 0.2s;
+}
+.sc:hover{border-color:var(--border2)}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.sc-green::before{background:var(--green)}
+.sc-blue::before{background:var(--blue)}
+.sc-amber::before{background:var(--amber)}
+.sc-red::before{background:var(--red)}
+.sc-purple::before{background:var(--purple)}
+.sc-teal::before{background:var(--teal)}
+.sc-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--text3);margin-bottom:8px}
+.sc-val{font-size:26px;font-weight:700;letter-spacing:-0.5px;line-height:1;font-family:'JetBrains Mono',monospace}
+.sc-sub{font-size:11px;color:var(--text3);margin-top:5px}
+.sc-trend{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;padding:2px 6px;border-radius:4px;margin-top:4px}
+.trend-up{background:var(--green-bg);color:var(--green)}
+.trend-dn{background:var(--red-bg);color:var(--red)}
 
-/* CHART */
-.chart-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:24px}
-.chart-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:600;margin-bottom:16px;color:var(--muted)}
-.chart-canvas-wrap{position:relative;height:260px}
+/* ── CHART CARD ── */
+.cc{background:var(--navy2);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:20px}
+.cc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap}
+.cc-left .cc-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:3px}
+.cc-left .cc-sub{font-size:12px;color:var(--text3)}
+.cc-right{display:flex;flex-direction:column;align-items:flex-end;gap:10px}
 
-/* TABLE */
-.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
-.table-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-.table-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:600}
-.table-meta{font-size:11px;color:var(--muted);display:flex;gap:12px;align-items:center}
-.export-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-family:inherit;font-size:11px;color:var(--muted);cursor:pointer;transition:all 0.15s}
-.export-btn:hover{border-color:var(--accent);color:var(--accent)}
-.table-scroll{overflow-x:auto;max-height:480px;overflow-y:auto}
-table{width:100%;border-collapse:collapse;min-width:600px}
-thead th{padding:10px 14px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);background:var(--surface2);border-bottom:1px solid var(--border);position:sticky;top:0}
-tbody tr{border-bottom:1px solid var(--border);transition:background 0.1s}
-tbody tr:hover{background:var(--surface2)}
-tbody tr:last-child{border-bottom:none}
-td{padding:10px 14px;font-size:13px;color:var(--text)}
-td.mono{font-family:'DM Mono',monospace;font-size:12px}
-td.muted{color:var(--muted)}
-.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500;font-family:'DM Mono',monospace}
-.badge-suntik{background:rgba(167,139,250,0.15);color:var(--violet)}
-.badge-infus{background:rgba(78,205,196,0.15);color:var(--teal)}
-.badge-vaksin{background:rgba(244,114,182,0.15);color:var(--pink)}
-.badge-konsultasi{background:rgba(200,245,96,0.12);color:var(--accent-dim)}
-.badge-other{background:rgba(122,120,114,0.2);color:var(--muted)}
-.empty{padding:48px;text-align:center;color:var(--muted)}
-.empty-icon{font-size:28px;margin-bottom:8px}
+/* TOGGLE */
+.tog-wrap{display:flex;gap:2px;background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:3px}
+.tog{background:none;border:none;border-radius:6px;padding:5px 12px;font-family:inherit;font-size:12px;font-weight:500;color:var(--text3);cursor:pointer;transition:all 0.15s;white-space:nowrap}
+.tog:hover{color:var(--text2)}
+.tog.on{background:var(--navy3);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,0.3)}
 
 /* LEGEND */
-.legend{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;padding:5px 10px;border-radius:99px;border:1px solid var(--border);transition:all 0.15s;user-select:none}
-.legend-item:hover{border-color:var(--border2);color:var(--text)}
-.legend-item.active{color:var(--text);border-color:var(--border2);background:var(--surface2)}
-.legend-item.inactive{opacity:0.35}
-.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.leg{display:flex;gap:6px;flex-wrap:wrap}
+.lp{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:500;padding:4px 10px;border-radius:99px;border:1px solid var(--border);background:var(--navy);cursor:pointer;transition:all 0.15s;user-select:none;color:var(--text3)}
+.lp:hover{border-color:var(--border2);color:var(--text2)}
+.lp.on{background:var(--navy3);color:var(--text);border-color:var(--border2)}
+.lp.off{opacity:0.25}
+.lp-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.chart-h{height:260px;position:relative}
+
+/* ── TABLE ── */
+.tw{background:var(--navy2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:20px}
+.tw-top{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.tw-title{font-size:13px;font-weight:600}
+.tw-right{display:flex;gap:8px;align-items:center}
+.tw-count{font-size:11px;color:var(--text3)}
+.ex-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-family:inherit;font-size:11px;color:var(--text2);cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:4px}
+.ex-btn:hover{border-color:var(--green);color:var(--green)}
+.tw-scroll{overflow-x:auto;max-height:400px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;min-width:560px}
+thead th{padding:9px 14px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:var(--text3);background:var(--navy);border-bottom:1px solid var(--border);position:sticky;top:0;white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--border);transition:background 0.1s}
+tbody tr:hover{background:var(--navy3)}
+tbody tr:last-child{border-bottom:none}
+td{padding:9px 14px;font-size:13px}
+td.mono{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2)}
+td.dim{color:var(--text2)}
+td.right{text-align:right}
+.bdg{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.bdg-dot{width:5px;height:5px;border-radius:50%}
+.bs{background:var(--purple-bg);color:var(--purple)}
+.bi{background:var(--teal-bg);color:var(--teal)}
+.bv{background:var(--amber-bg);color:var(--amber)}
+.bk{background:var(--green-bg);color:var(--green)}
+.bo{background:rgba(90,122,154,0.15);color:var(--text3)}
+.empty-row{padding:48px;text-align:center;color:var(--text3);font-size:13px}
+
+/* ── EXPENSE SECTION ── */
+.exp-section{background:var(--navy2);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:20px}
+.exp-title{font-size:14px;font-weight:600;margin-bottom:4px}
+.exp-sub{font-size:12px;color:var(--text3);margin-bottom:16px}
+.exp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:16px}
+.exp-field{display:flex;flex-direction:column;gap:5px}
+.exp-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:var(--text3)}
+.exp-input-wrap{display:flex;align-items:center;background:var(--navy);border:1px solid var(--border);border-radius:7px;overflow:hidden;transition:border-color 0.15s}
+.exp-input-wrap:focus-within{border-color:var(--green)}
+.exp-prefix{padding:0 10px;font-size:12px;color:var(--text3);font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.exp-input{background:none;border:none;padding:9px 10px 9px 0;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text);outline:none;width:100%}
+.exp-period{display:flex;gap:8px;align-items:flex-end;margin-bottom:16px;flex-wrap:wrap}
+.exp-period .fg{flex-shrink:0}
+.exp-save{background:var(--green);color:var(--navy);border:none;border-radius:7px;padding:8px 18px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;align-self:flex-end;transition:all 0.15s}
+.exp-save:hover{background:var(--green-d)}
+
+/* Profit card special */
+.profit-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+.profit-card{background:var(--navy2);border:1px solid var(--border);border-radius:var(--r);padding:20px;position:relative;overflow:hidden}
+.profit-card.positive{border-color:rgba(0,196,140,0.3);background:var(--green-bg)}
+.profit-card.negative{border-color:rgba(255,107,107,0.3);background:var(--red-bg)}
+.profit-card-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--text3);margin-bottom:8px}
+.profit-card-val{font-size:28px;font-weight:700;letter-spacing:-1px;font-family:'JetBrains Mono',monospace}
+.profit-card.positive .profit-card-val{color:var(--green)}
+.profit-card.negative .profit-card-val{color:var(--red)}
+.profit-card-sub{font-size:11px;color:var(--text3);margin-top:5px}
+
+/* Expense history table */
+.exp-hist{margin-top:12px}
+.exp-hist-title{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px}
 </style>
 </head>
 <body>
 
-<!-- UPLOAD SCREEN -->
-<div id="uploadScreen">
-  <div class="upload-brand">One<span>Klinik</span></div>
-  <div class="upload-sub">Upload 3 file CSV untuk memulai dashboard</div>
+<!-- ══ UPLOAD ══ -->
+<div id="upload">
+  <div class="up-wrap">
+    <div class="up-logo">
+      <div class="up-logo-mark"><svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></svg></div>
+      <div class="up-logo-text">One<span>Klinik</span> Analytics</div>
+    </div>
+    <div class="up-h">Insight dari <span>data klinik</span> kamu</div>
+    <div class="up-sub">Upload EMR tiap minggu. Data harga disimpan otomatis — tidak perlu upload ulang.</div>
 
-  <div class="upload-grid">
-    <div class="upload-card" id="card-emr">
-      <input type="file" accept=".csv" onchange="handleFile('emr',this)"/>
-      <div class="upload-card-icon icon-emr">📋</div>
-      <div class="upload-card-title">EMR Data</div>
-      <div class="upload-card-desc">File Data.csv dari sheet Efektivitas Promo</div>
-      <div class="upload-card-status status-waiting" id="status-emr">Belum diupload</div>
+    <div class="price-banner" id="price-banner">
+      <div class="price-banner-left">
+        <div class="price-banner-dot"></div>
+        <div class="price-banner-info">
+          <div class="price-banner-title">Data harga tersimpan</div>
+          <div class="price-banner-sub" id="banner-sub"></div>
+        </div>
+      </div>
+      <button class="price-banner-reset" onclick="clearPrices()">Reset harga</button>
     </div>
-    <div class="upload-card" id="card-price">
-      <input type="file" accept=".csv" onchange="handleFile('price',this)"/>
-      <div class="upload-card-icon icon-price">💰</div>
-      <div class="upload-card-title">Base Price</div>
-      <div class="upload-card-desc">Procedures Master List CSV</div>
-      <div class="upload-card-status status-waiting" id="status-price">Belum diupload</div>
+
+    <div class="up-files">
+      <div class="up-file" id="uf-emr">
+        <input type="file" accept=".csv" onchange="loadFile('emr',this)"/>
+        <div class="up-file-num" id="un-emr">1</div>
+        <div class="up-file-info">
+          <div class="up-file-title">EMR Data <span class="up-file-tag tag-weekly">Update mingguan</span></div>
+          <div class="up-file-desc">Data.csv — kunjungan pasien semua cabang</div>
+        </div>
+        <div class="up-file-status" id="us-emr">Pilih file</div>
+      </div>
+      <div class="up-file" id="uf-price">
+        <input type="file" accept=".csv" onchange="loadFile('price',this)"/>
+        <div class="up-file-num" id="un-price">2</div>
+        <div class="up-file-info">
+          <div class="up-file-title">Base Price <span class="up-file-tag tag-once">Cukup sekali</span></div>
+          <div class="up-file-desc">Procedures Master List — harga dasar</div>
+        </div>
+        <div class="up-file-status" id="us-price">Pilih file</div>
+      </div>
+      <div class="up-file" id="uf-payer">
+        <input type="file" accept=".csv" onchange="loadFile('payer',this)"/>
+        <div class="up-file-num" id="un-payer">3</div>
+        <div class="up-file-info">
+          <div class="up-file-title">Payer Price <span class="up-file-tag tag-once">Cukup sekali</span></div>
+          <div class="up-file-desc">Procedures Pricing by Payer — harga per payer</div>
+        </div>
+        <div class="up-file-status" id="us-payer">Pilih file</div>
+      </div>
     </div>
-    <div class="upload-card" id="card-payer">
-      <input type="file" accept=".csv" onchange="handleFile('payer',this)"/>
-      <div class="upload-card-icon icon-payer">🏦</div>
-      <div class="upload-card-title">Payer Price</div>
-      <div class="upload-card-desc">Procedures Pricing by Payer CSV</div>
-      <div class="upload-card-status status-waiting" id="status-payer">Belum diupload</div>
-    </div>
+
+    <button class="up-btn" id="up-go" onclick="launch()">Buka Dashboard →</button>
   </div>
-
-  <button class="launch-btn" id="launchBtn" onclick="launchApp()">Buka Dashboard →</button>
 </div>
 
-<!-- APP -->
+<!-- ══ APP ══ -->
 <div id="app">
-  <div class="header">
-    <div class="brand">One<span>Klinik</span> <span style="font-size:11px;color:var(--muted);font-family:'DM Sans';font-weight:400;margin-left:4px">Dashboard</span></div>
-    <div class="header-right">
-      <button class="reset-btn" onclick="resetApp()">← Ganti File</button>
+  <div class="topbar">
+    <div class="t-logo">
+      <div class="t-mark"><svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></svg></div>
+      <div class="t-name">One<span>Klinik</span></div>
+    </div>
+    <div class="t-right">
+      <div class="t-period" id="t-period">—</div>
+      <button class="t-back" onclick="location.reload()">Ganti File</button>
     </div>
   </div>
 
   <div class="nav">
-    <button class="nav-tab active" onclick="showTab('1hc',this)">1HC</button>
-    <button class="nav-tab" onclick="showTab('homecare',this)">Homecare</button>
-    <button class="nav-tab" onclick="showTab('price',this)">Price Dashboard</button>
+    <button class="ntab on" onclick="goTab('1hc',this)">Klinik 1HC</button>
+    <button class="ntab" onclick="goTab('hc',this)">Homecare</button>
+    <button class="ntab" onclick="goTab('price',this)">Price Dashboard</button>
   </div>
 
   <div class="main">
 
-    <!-- 1HC TAB -->
-    <div class="page active" id="page-1hc">
-      <div class="filter-row">
-        <div class="filter-group"><span class="filter-label">Klinik</span><select id="f1-lokasi" onchange="render1HC()"><option value="">Semua</option></select></div>
-        <div class="filter-group"><span class="filter-label">Payment Type</span><select id="f1-payer" onchange="render1HC()"><option value="">Semua</option></select></div>
-        <div class="filter-group"><span class="filter-label">Tahun</span><select id="f1-tahun" onchange="render1HC()"><option value="">Semua</option></select></div>
-        <button class="filter-reset" onclick="resetFilters('1hc')">Reset</button>
+    <!-- ── 1HC ── -->
+    <div class="pg on" id="pg-1hc">
+      <div class="fbar">
+        <div class="fg"><span class="fl">Klinik</span><select id="f1lok" onchange="d1hc()"><option value="">Semua Klinik</option></select></div>
+        <div class="fg"><span class="fl">Payment Type</span><select id="f1pay" onchange="d1hc()"><option value="">Semua</option></select></div>
+        <div class="fg"><span class="fl">Tahun</span><select id="f1thn" onchange="d1hc()"><option value="">Semua Tahun</option></select></div>
+        <button class="freset" onclick="rf('1hc')">↺ Reset</button>
       </div>
-      <div class="stats-row" id="stats-1hc"></div>
-      <div class="chart-wrap">
-        <div class="chart-title">Kunjungan per Bulan</div>
-        <div class="legend" id="legend-1hc"></div>
-        <div class="chart-canvas-wrap"><canvas id="chart-1hc"></canvas></div>
-      </div>
-      <div class="table-wrap">
-        <div class="table-header">
-          <span class="table-title">Detail Kunjungan</span>
-          <div class="table-meta">
-            <span id="count-1hc">0 rows</span>
-            <button class="export-btn" onclick="exportCSV('1hc')">Export CSV</button>
+      <div class="srow" id="st1hc"></div>
+      <div class="cc">
+        <div class="cc-top">
+          <div class="cc-left">
+            <div class="cc-title" id="ct1hc">Tren Kunjungan per Bulan</div>
+            <div class="cc-sub">Klik kategori untuk filter</div>
+          </div>
+          <div class="cc-right">
+            <div class="tog-wrap">
+              <button class="tog on" onclick="setMode('1hc','kunjungan',this)">Kunjungan</button>
+              <button class="tog" onclick="setMode('1hc','pendapatan',this)">Pendapatan</button>
+              <button class="tog" onclick="setMode('1hc','avg',this)">Rata-rata</button>
+            </div>
+            <div class="leg" id="leg1hc"></div>
           </div>
         </div>
-        <div class="table-scroll"><div id="table-1hc"></div></div>
+        <div class="chart-h"><canvas id="ch1hc"></canvas></div>
+      </div>
+      <div class="tw">
+        <div class="tw-top">
+          <span class="tw-title">Detail Kunjungan</span>
+          <div class="tw-right">
+            <span class="tw-count" id="tc1hc"></span>
+            <button class="ex-btn" onclick="doExport('1hc')">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              Export
+            </button>
+          </div>
+        </div>
+        <div class="tw-scroll" id="tb1hc"></div>
       </div>
     </div>
 
-    <!-- HOMECARE TAB -->
-    <div class="page" id="page-homecare">
-      <div class="filter-row">
-        <div class="filter-group"><span class="filter-label">Payment Type</span><select id="fh-payer" onchange="renderHomecare()"><option value="">Semua</option></select></div>
-        <div class="filter-group"><span class="filter-label">Tahun</span><select id="fh-tahun" onchange="renderHomecare()"><option value="">Semua</option></select></div>
-        <button class="filter-reset" onclick="resetFilters('homecare')">Reset</button>
+    <!-- ── HOMECARE ── -->
+    <div class="pg" id="pg-hc">
+      <div class="fbar">
+        <div class="fg"><span class="fl">Payment Type</span><select id="fhpay" onchange="dhc()"><option value="">Semua</option></select></div>
+        <div class="fg"><span class="fl">Tahun</span><select id="fhthn" onchange="dhc()"><option value="">Semua Tahun</option></select></div>
+        <div class="fg"><span class="fl">Bulan Expense</span><select id="fhbln" onchange="renderExpenseHistory()"><option value="">Semua</option></select></div>
+        <button class="freset" onclick="rf('hc')">↺ Reset</button>
       </div>
-      <div class="stats-row" id="stats-homecare"></div>
-      <div class="chart-wrap">
-        <div class="chart-title">Kunjungan per Bulan</div>
-        <div class="legend" id="legend-homecare"></div>
-        <div class="chart-canvas-wrap"><canvas id="chart-homecare"></canvas></div>
-      </div>
-      <div class="table-wrap">
-        <div class="table-header">
-          <span class="table-title">Detail Kunjungan</span>
-          <div class="table-meta">
-            <span id="count-homecare">0 rows</span>
-            <button class="export-btn" onclick="exportCSV('homecare')">Export CSV</button>
+
+      <!-- Profit summary -->
+      <div class="profit-row" id="profit-row"></div>
+
+      <div class="srow" id="sthc"></div>
+      <div class="cc">
+        <div class="cc-top">
+          <div class="cc-left">
+            <div class="cc-title" id="cthc">Tren Kunjungan Homecare per Bulan</div>
+            <div class="cc-sub">Klik kategori untuk filter</div>
+          </div>
+          <div class="cc-right">
+            <div class="tog-wrap">
+              <button class="tog on" onclick="setMode('hc','kunjungan',this)">Kunjungan</button>
+              <button class="tog" onclick="setMode('hc','pendapatan',this)">Pendapatan</button>
+              <button class="tog" onclick="setMode('hc','avg',this)">Rata-rata</button>
+            </div>
+            <div class="leg" id="leghc"></div>
           </div>
         </div>
-        <div class="table-scroll"><div id="table-homecare"></div></div>
+        <div class="chart-h"><canvas id="chhc"></canvas></div>
+      </div>
+
+      <!-- EXPENSE INPUT -->
+      <div class="exp-section">
+        <div class="exp-title">Input Expense Homecare</div>
+        <div class="exp-sub">Input expense per bulan. Data disimpan otomatis di browser.</div>
+        <div class="exp-period">
+          <div class="fg"><span class="fl">Bulan</span>
+            <select id="ebln">
+              <option>Jan</option><option>Feb</option><option>Mar</option><option>Apr</option>
+              <option>May</option><option>Jun</option><option>Jul</option><option>Aug</option>
+              <option>Sep</option><option>Oct</option><option>Nov</option><option>Dec</option>
+            </select>
+          </div>
+          <div class="fg"><span class="fl">Tahun</span>
+            <select id="ethn">
+              <option>2024</option><option>2025</option><option>2026</option>
+            </select>
+          </div>
+          <button class="exp-save" onclick="saveExpense()">Simpan</button>
+        </div>
+        <div class="exp-grid">
+          <div class="exp-field">
+            <span class="exp-label">Marketing</span>
+            <div class="exp-input-wrap"><span class="exp-prefix">Rp</span><input class="exp-input" id="e-marketing" type="number" placeholder="0"/></div>
+          </div>
+          <div class="exp-field">
+            <span class="exp-label">BHP</span>
+            <div class="exp-input-wrap"><span class="exp-prefix">Rp</span><input class="exp-input" id="e-bhp" type="number" placeholder="0"/></div>
+          </div>
+          <div class="exp-field">
+            <span class="exp-label">Equipment</span>
+            <div class="exp-input-wrap"><span class="exp-prefix">Rp</span><input class="exp-input" id="e-equipment" type="number" placeholder="0"/></div>
+          </div>
+          <div class="exp-field">
+            <span class="exp-label">Insentif</span>
+            <div class="exp-input-wrap"><span class="exp-prefix">Rp</span><input class="exp-input" id="e-insentif" type="number" placeholder="0"/></div>
+          </div>
+        </div>
+        <div class="exp-hist">
+          <div class="exp-hist-title">Riwayat Expense</div>
+          <div id="exp-hist-table"></div>
+        </div>
+      </div>
+
+      <div class="tw">
+        <div class="tw-top">
+          <span class="tw-title">Detail Kunjungan Homecare</span>
+          <div class="tw-right">
+            <span class="tw-count" id="tchc"></span>
+            <button class="ex-btn" onclick="doExport('hc')">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              Export
+            </button>
+          </div>
+        </div>
+        <div class="tw-scroll" id="tbhc"></div>
       </div>
     </div>
 
-    <!-- PRICE DASHBOARD TAB -->
-    <div class="page" id="page-price">
-      <div class="filter-row">
-        <div class="filter-group"><span class="filter-label">Klinik</span><select id="fp-lokasi" onchange="renderPrice()"><option value="">Semua</option></select></div>
-        <div class="filter-group"><span class="filter-label">Payment Type</span><select id="fp-payer" onchange="renderPrice()"><option value="">Semua</option></select></div>
-        <div class="filter-group"><span class="filter-label">Bulan</span><select id="fp-bulan" onchange="renderPrice()"><option value="">Semua</option></select></div>
-        <div class="filter-group"><span class="filter-label">Kategori</span><select id="fp-kat" onchange="renderPrice()"><option value="">Semua</option></select></div>
-        <button class="filter-reset" onclick="resetFilters('price')">Reset</button>
+    <!-- ── PRICE DASHBOARD ── -->
+    <div class="pg" id="pg-price">
+      <div class="fbar">
+        <div class="fg"><span class="fl">Klinik</span><select id="fplok" onchange="dprice()"><option value="">Semua Klinik</option></select></div>
+        <div class="fg"><span class="fl">Payment Type</span><select id="fppay" onchange="dprice()"><option value="">Semua</option></select></div>
+        <div class="fg"><span class="fl">Bulan</span><select id="fpbln" onchange="dprice()"><option value="">Semua Bulan</option></select></div>
+        <div class="fg"><span class="fl">Kategori</span><select id="fpkat" onchange="dprice()"><option value="">Semua</option></select></div>
+        <button class="freset" onclick="rf('price')">↺ Reset</button>
       </div>
-      <div class="stats-row" id="stats-price"></div>
-      <div class="table-wrap">
-        <div class="table-header">
-          <span class="table-title">Price Dashboard</span>
-          <div class="table-meta">
-            <span id="count-price">0 rows</span>
-            <button class="export-btn" onclick="exportCSV('price')">Export CSV</button>
+      <div class="srow" id="stprice"></div>
+      <div class="tw">
+        <div class="tw-top">
+          <span class="tw-title">Price Dashboard</span>
+          <div class="tw-right">
+            <span class="tw-count" id="tcprice"></span>
+            <button class="ex-btn" onclick="doExport('price')">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              Export
+            </button>
           </div>
         </div>
-        <div class="table-scroll"><div id="table-price"></div></div>
+        <div class="tw-scroll" id="tbprice"></div>
       </div>
     </div>
 
@@ -259,430 +517,552 @@ td.muted{color:var(--muted)}
 </div>
 
 <script>
-// ── State ─────────────────────────────────────────────────────
-let rawEMR = [], basePriceMap = {}, payerPriceMap = {};
-let loaded = { emr: false, price: false, payer: false };
-let charts = {};
-let filteredData = { '1hc': [], homecare: [], price: [] };
+// ════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════
+var rows=[], baseMap={}, payerMap={};
+var loaded={emr:false,price:false,payer:false};
+var charts={};
+var snap={'1hc':[],'hc':[],'price':[]};
+var modes={'1hc':'kunjungan','hc':'kunjungan'};
+var aktif={'1hc':{},'hc':{}};
+var expenses={}; // key: "Jan-2025" → {marketing,bhp,equipment,insentif}
 
-const CATS = {
-  suntik:     { label:'Suntik',     color:'#A78BFA', badge:'badge-suntik' },
-  infus:      { label:'Infus',      color:'#4ECDC4', badge:'badge-infus'  },
-  vaksin:     { label:'Vaksin',     color:'#F472B6', badge:'badge-vaksin' },
-  konsultasi: { label:'Konsultasi', color:'#C8F560', badge:'badge-konsultasi' },
-  other:      { label:'Other',      color:'#5A5852', badge:'badge-other'  }
+var CATS={
+  suntik:    {l:'Suntik',    c:'#A78BFA',bdg:'bs'},
+  infus:     {l:'Infus',     c:'#2DD4BF',bdg:'bi'},
+  vaksin:    {l:'Vaksin',    c:'#FFB84A',bdg:'bv'},
+  konsultasi:{l:'Konsultasi',c:'#00C48C',bdg:'bk'},
+  other:     {l:'Other',     c:'#5A7A9A',bdg:'bo'}
 };
+var CATK=['suntik','infus','vaksin','konsultasi','other'];
+var BORD=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-const BULAN_ORDER = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+// ════════════════════════════════════════
+// LOCALSTORAGE
+// ════════════════════════════════════════
+var LS={PRICE:'ok_bm',PAYER:'ok_pm',DATE:'ok_dt',EXP:'ok_exp'};
 
-// ── File handling ─────────────────────────────────────────────
-function handleFile(type, input) {
-  const file = input.files[0];
-  if (!file) return;
-  Papa.parse(file, {
-    header: true, skipEmptyLines: true,
-    complete: r => {
-      if (type === 'emr')   processEMR(r.data);
-      if (type === 'price') processPrice(r.data);
-      if (type === 'payer') processPayer(r.data);
-      loaded[type] = true;
-      document.getElementById('status-' + type).textContent = `✓ ${r.data.length} rows`;
-      document.getElementById('status-' + type).className = 'upload-card-status status-loaded';
-      document.getElementById('card-' + type).classList.add('loaded');
+function initLS(){
+  try{
+    var bp=localStorage.getItem(LS.PRICE);
+    var pp=localStorage.getItem(LS.PAYER);
+    var dt=localStorage.getItem(LS.DATE);
+    var ex=localStorage.getItem(LS.EXP);
+    if(bp&&pp){
+      baseMap=JSON.parse(bp); payerMap=JSON.parse(pp);
+      loaded.price=loaded.payer=true;
+      document.getElementById('price-banner').classList.add('show');
+      document.getElementById('banner-sub').textContent=
+        'Disimpan '+dt+' · '+Object.keys(baseMap).length+' prosedur';
+      markDone('price','✓ Tersimpan'); markDone('payer','✓ Tersimpan');
       checkReady();
     }
-  });
+    if(ex) expenses=JSON.parse(ex);
+  }catch(e){}
 }
 
-function processEMR(rows) {
-  rawEMR = rows.map(r => {
-    const dateRaw = r['Date'] || '';
-    const dateObj = dateRaw ? new Date(dateRaw) : null;
-    const bulan   = r['Bulan'] || (dateObj ? dateObj.toLocaleString('en',{month:'short'})+'-'+dateObj.getFullYear() : '');
-    const tahun   = r['Year']  || (dateObj ? dateObj.getFullYear().toString() : '');
-    const loc     = (r['location_name'] || '').trim();
-    const isHC    = loc.toLowerCase() === 'homecare';
-
-    // Kategori
-    const suntik  = r['Suntik']  === 'TRUE' || r['Suntik']  === true;
-    const infus   = r['Infus']   === 'TRUE' || r['Infus']   === true;
-    const vaksin  = r['Vaksin']  === 'TRUE' || r['Vaksin']  === true;
-    let kat = 'other';
-    if (suntik) kat = 'suntik';
-    else if (infus) kat = 'infus';
-    else if (vaksin) kat = 'vaksin';
-    else {
-      const klas = (r['Klasifikasi'] || '').toLowerCase();
-      if (klas.includes('konsultasi') || klas.includes('pengobatan')) kat = 'konsultasi';
-    }
-
-    const layanan     = (r['Layanan Grup'] || '').trim();
-    const paymentType = (r['payment_type'] || '').trim().toLowerCase();
-    const pendapatan  = parseFloat((r['Total Pendapatan']||'0').toString().replace(/[^0-9.-]/g,'')) || 0;
-
-    return {
-      date: dateRaw, bulan, tahun,
-      nama: (r['Name']||'').trim(),
-      lokasi: loc, isHomecare: isHC,
-      layanan, kat, paymentType,
-      pendapatan,
-      bulanSort: parseBulanSort(bulan)
-    };
-  }).filter(r => r.layanan);
+function savePriceLS(){
+  try{
+    localStorage.setItem(LS.PRICE,JSON.stringify(baseMap));
+    localStorage.setItem(LS.PAYER,JSON.stringify(payerMap));
+    var d=new Date();
+    localStorage.setItem(LS.DATE,d.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}));
+  }catch(e){}
 }
 
-function processPrice(rows) {
-  basePriceMap = {};
-  rows.forEach(r => {
-    const name = (r['Service Name (BH)'] || '').trim().toUpperCase();
-    const priceCols = Object.entries(r).filter(([k]) => k === 'Base Price');
-    // Use last Base Price column (numeric one)
-    let price = 0;
-    for (const [k,v] of Object.entries(r)) {
-      if (k === 'Base Price') price = parseFloat((v||'').toString().replace(/[^0-9.]/g,'')) || price;
-    }
-    if (name) basePriceMap[name] = price;
-  });
+function saveExpLS(){
+  try{ localStorage.setItem(LS.EXP,JSON.stringify(expenses)); }catch(e){}
 }
 
-function processPayer(rows) {
-  payerPriceMap = {};
-  rows.forEach(r => {
-    const payerRaw = (r['Payer Price ID'] || '').trim();
-    const procRaw  = (r['Procedure ID']  || '').trim();
-    const excess   = parseFloat((r['Patient Excess']||'0').toString().replace(/[^0-9.]/g,'')) || 0;
-    // Strip [x] from payer and proc
-    const payer = payerRaw.replace(/\s*\[\d+\]\s*$/, '').trim().toLowerCase();
-    const proc  = procRaw.replace(/^\[\d+\]\s*/, '').trim().toUpperCase();
-    if (payer && proc) payerPriceMap[payer + '|' + proc] = excess;
-  });
-}
-
-function parseBulanSort(bulan) {
-  if (!bulan) return 0;
-  const [mon, yr] = bulan.split('-');
-  const mi = BULAN_ORDER.findIndex(m => m.toLowerCase() === (mon||'').toLowerCase().slice(0,3));
-  return (parseInt(yr)||0) * 100 + (mi >= 0 ? mi : 0);
-}
-
-function checkReady() {
-  if (loaded.emr && loaded.price && loaded.payer) {
-    document.getElementById('launchBtn').classList.add('ready');
-  }
-}
-
-function launchApp() {
-  if (!loaded.emr || !loaded.price || !loaded.payer) return;
-  document.getElementById('uploadScreen').style.display = 'none';
-  document.getElementById('app').style.display = 'flex';
-  populateFilters();
-  render1HC();
-  renderHomecare();
-  renderPrice();
-}
-
-function resetApp() {
+function clearPrices(){
+  [LS.PRICE,LS.PAYER,LS.DATE].forEach(function(k){localStorage.removeItem(k);});
   location.reload();
 }
 
-// ── Filters ───────────────────────────────────────────────────
-function populateFilters() {
-  const data1hc = rawEMR.filter(r => !r.isHomecare);
-  const dataHC  = rawEMR.filter(r => r.isHomecare);
-
-  // 1HC filters
-  fillSel('f1-lokasi', [...new Set(data1hc.map(r => r.lokasi).filter(Boolean))].sort());
-  fillSel('f1-payer',  [...new Set(data1hc.map(r => r.paymentType).filter(Boolean))].sort());
-  fillSel('f1-tahun',  [...new Set(data1hc.map(r => r.tahun).filter(Boolean))].sort().reverse());
-
-  // Homecare filters
-  fillSel('fh-payer',  [...new Set(dataHC.map(r => r.paymentType).filter(Boolean))].sort());
-  fillSel('fh-tahun',  [...new Set(dataHC.map(r => r.tahun).filter(Boolean))].sort().reverse());
-
-  // Price filters
-  fillSel('fp-lokasi', [...new Set(rawEMR.map(r => r.lokasi).filter(Boolean))].sort());
-  fillSel('fp-payer',  [...new Set(rawEMR.map(r => r.paymentType).filter(Boolean))].sort());
-  const bulanSorted = [...new Set(rawEMR.map(r => r.bulan).filter(Boolean))]
-    .sort((a,b) => parseBulanSort(a) - parseBulanSort(b));
-  fillSel('fp-bulan', bulanSorted);
-  fillSel('fp-kat',   Object.keys(CATS));
+function markDone(type,text){
+  var el=document.getElementById('us-'+type);
+  var num=document.getElementById('un-'+type);
+  var card=document.getElementById('uf-'+type);
+  if(el) el.textContent=text||'✓';
+  if(num) num.textContent='✓';
+  if(card) card.classList.add('done');
 }
 
-function fillSel(id, opts) {
-  const sel = document.getElementById(id);
-  if (!sel) return;
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">Semua</option>' + opts.map(o => `<option value="${o}">${o}</option>`).join('');
-  if (cur) sel.value = cur;
+// ════════════════════════════════════════
+// FILE LOADING
+// ════════════════════════════════════════
+function loadFile(type,inp){
+  var file=inp.files[0]; if(!file) return;
+  Papa.parse(file,{header:true,skipEmptyLines:true,complete:function(r){
+    if(type==='emr')   parseEMR(r.data);
+    if(type==='price'){ parsePrice(r.data); savePriceLS(); }
+    if(type==='payer'){ parsePayer(r.data); savePriceLS(); }
+    loaded[type]=true;
+    markDone(type,'✓ '+r.data.length+' baris');
+    checkReady();
+  }});
 }
 
-function resetFilters(tab) {
-  if (tab === '1hc') {
-    ['f1-lokasi','f1-payer','f1-tahun'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
-    render1HC();
-  } else if (tab === 'homecare') {
-    ['fh-payer','fh-tahun'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
-    renderHomecare();
-  } else {
-    ['fp-lokasi','fp-payer','fp-bulan','fp-kat'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
-    renderPrice();
+function checkReady(){
+  if(loaded.emr&&loaded.price&&loaded.payer)
+    document.getElementById('up-go').classList.add('on');
+}
+
+function launch(){
+  if(!loaded.emr||!loaded.price||!loaded.payer) return;
+  document.getElementById('upload').style.display='none';
+  document.getElementById('app').style.display='flex';
+  document.getElementById('app').style.flexDirection='column';
+  fillFilters(); d1hc(); dhc(); dprice();
+  var years=[...new Set(rows.map(function(r){return r.tahun;}).filter(Boolean))].sort();
+  if(years.length) document.getElementById('t-period').textContent=
+    years[0]+(years.length>1?' – '+years[years.length-1]:'');
+  // Set default expense year to latest
+  var latestYear=years[years.length-1]||'2025';
+  var ethn=document.getElementById('ethn');
+  if(ethn) for(var i=0;i<ethn.options.length;i++){
+    if(ethn.options[i].value===latestYear){ethn.selectedIndex=i;break;}
   }
 }
 
-// ── Tab switcher ──────────────────────────────────────────────
-function showTab(tab, el) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('page-' + tab).classList.add('active');
-  el.classList.add('active');
+// ════════════════════════════════════════
+// PARSE
+// ════════════════════════════════════════
+function parseEMR(data){
+  rows=data.map(function(r){
+    var loc=(r['location_name']||'').trim();
+    var lay=(r['Layanan Grup']||'').trim();
+    // encounter_procedures stripped of numeric prefix — used for price lookup
+    var enc=(r['encounter_procedures']||'').trim().replace(/^\d+[\d.]*\s*-\s*/,'').trim();
+    var bln=(r['Bulan']||'').trim();
+    var thn=(r['Year']||'').trim();
+    var pay=(r['payment_type']||'').trim().toLowerCase();
+    var pend=parseFloat((r['Total Pendapatan']||'0').replace(/[^0-9.-]/g,''))||0;
+    var s=r['Suntik']==='TRUE',i=r['Infus']==='TRUE',v=r['Vaksin']==='TRUE';
+    var kat='other';
+    if(s)kat='suntik'; else if(i)kat='infus'; else if(v)kat='vaksin';
+    else{
+      // Keyword-based fallback categorization
+      var haystack=(lay+' '+enc+' '+(r['Klasifikasi Layanan Grup']||'')).toLowerCase();
+      var isVaksin=/vaksin|vaxigrip|vaksinasi|influenza|hepatitis|gardasil|prevenar|hpv|dosis ke/i.test(haystack);
+      var isInfus=/infus|iv fluid|mood booster|healthy bright|jet lag|anti hangover|stomach soother|fever go away|pain killer|immune max|booster/i.test(haystack);
+      var isPaketSuntik=/paket suntik/i.test(haystack);
+      var isSuntik=!isPaketSuntik&&/suntik|injeksi|injection|suntikan/i.test(haystack);
+      var isKonsul=/konsultasi|konsul|tele.visit|home visit|wellness companion|igloo|gizi|psikolog/i.test(haystack);
+      if(isVaksin)kat='vaksin';
+      else if(isInfus)kat='infus';
+      else if(isSuntik)kat='suntik';
+      else if(isKonsul)kat='konsultasi';
+    }
+    return{date:r['Date']||'',bulan:bln,tahun:thn,
+      nama:(r['Name']||'').trim(),lokasi:loc,
+      isHC:loc.toLowerCase()==='homecare',
+      layanan:lay,   // display: Layanan Grup
+      enc:enc,       // lookup: encounter_procedures stripped
+      kat:kat,payType:pay,pend:pend,bsort:bsort(bln)};
+  }).filter(function(r){return r.layanan;});
 }
 
-// ── 1HC render ────────────────────────────────────────────────
-function render1HC() {
-  const lokasi = document.getElementById('f1-lokasi').value;
-  const payer  = document.getElementById('f1-payer').value;
-  const tahun  = document.getElementById('f1-tahun').value;
-
-  let data = rawEMR.filter(r => !r.isHomecare);
-  if (lokasi) data = data.filter(r => r.lokasi === lokasi);
-  if (payer)  data = data.filter(r => r.paymentType === payer);
-  if (tahun)  data = data.filter(r => r.tahun === tahun);
-
-  filteredData['1hc'] = data;
-  activeKats['1hc'] = new Set();
-  renderStats('1hc', data);
-  renderChartAndTable('1hc');
+function parsePrice(data){
+  baseMap={};
+  data.forEach(function(r){
+    var name=(r['Service Name (BH)']||'').trim().toUpperCase();
+    var p=0;
+    Object.keys(r).forEach(function(k){if(k==='Base Price')p=parseFloat((r[k]||'').replace(/[^0-9.]/g,''))||p;});
+    if(name)baseMap[name]=p;
+  });
 }
 
-// ── Homecare render ───────────────────────────────────────────
-function renderHomecare() {
-  const payer = document.getElementById('fh-payer').value;
-  const tahun = document.getElementById('fh-tahun').value;
-
-  let data = rawEMR.filter(r => r.isHomecare);
-  if (payer) data = data.filter(r => r.paymentType === payer);
-  if (tahun) data = data.filter(r => r.tahun === tahun);
-
-  filteredData['homecare'] = data;
-  activeKats['homecare'] = new Set();
-  renderStats('homecare', data);
-  renderChartAndTable('homecare');
+function parsePayer(data){
+  payerMap={};
+  data.forEach(function(r){
+    var pr=(r['Payer Price ID']||'').trim();
+    var pc=(r['Procedure ID']||'').trim();
+    var ex=parseFloat((r['Patient Excess']||'0').replace(/[^0-9.]/g,''))||0;
+    var payer=pr.replace(/\s*\[\d+\]\s*$/,'').trim().toLowerCase();
+    var proc=pc.replace(/^\[\d+\]\s*/,'').trim().toUpperCase();
+    if(payer&&proc)payerMap[payer+'|'+proc]=ex;
+  });
 }
 
-// ── Price Dashboard render ────────────────────────────────────
-function renderPrice() {
-  const lokasi = document.getElementById('fp-lokasi').value;
-  const payer  = document.getElementById('fp-payer').value;
-  const bulan  = document.getElementById('fp-bulan').value;
-  const kat    = document.getElementById('fp-kat').value;
+function bsort(b){
+  if(!b)return 0;
+  var p=b.split('-');
+  var mi=BORD.indexOf(p[0]);
+  return(parseInt(p[1])||0)*100+(mi>=0?mi:0);
+}
 
-  let data = rawEMR;
-  if (lokasi) data = data.filter(r => r.lokasi === lokasi);
-  if (payer)  data = data.filter(r => r.paymentType === payer);
-  if (bulan)  data = data.filter(r => r.bulan === bulan);
-  if (kat)    data = data.filter(r => r.kat === kat);
+function getPrice(r){
+  // Primary: match by encounter_procedures (stripped) + payer
+  var enc=(r.enc||'').toUpperCase();
+  var lay=(r.layanan||'').toUpperCase();
 
-  filteredData['price'] = data;
+  // Try payer price with encounter first, then layanan
+  var k1=r.payType+'|'+enc;
+  var k2=r.payType+'|'+lay;
+  if(enc && payerMap[k1]!==undefined) return payerMap[k1];
+  if(lay && payerMap[k2]!==undefined) return payerMap[k2];
 
-  // Stats
-  const totalKunjungan = data.length;
-  const withPrice = data.filter(r => getPayerPrice(r) !== null).length;
-  document.getElementById('stats-price').innerHTML = `
-    <div class="stat-card"><div class="stat-label">Total Kunjungan</div><div class="stat-value accent">${fmt(totalKunjungan)}</div><div class="stat-sub">semua kategori</div></div>
-    <div class="stat-card"><div class="stat-label">Dengan Price Data</div><div class="stat-value">${fmt(withPrice)}</div><div class="stat-sub">ada payer price</div></div>
-    <div class="stat-card"><div class="stat-label">Tanpa Price Data</div><div class="stat-value">${fmt(totalKunjungan - withPrice)}</div><div class="stat-sub">perlu dicek</div></div>
-  `;
+  // Try base price with encounter first, then layanan
+  if(enc && baseMap[enc]!==undefined) return baseMap[enc];
+  if(lay && baseMap[lay]!==undefined) return baseMap[lay];
 
-  // Table
-  document.getElementById('count-price').textContent = data.length + ' rows';
-  if (!data.length) {
-    document.getElementById('table-price').innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div>Tidak ada data</div></div>';
+  return null;
+}
+
+// ════════════════════════════════════════
+// FILTERS
+// ════════════════════════════════════════
+function fillFilters(){
+  var d1=rows.filter(function(r){return !r.isHC;});
+  var dh=rows.filter(function(r){return r.isHC;});
+  fsel('f1lok',uniq(d1,'lokasi')); fsel('f1pay',uniq(d1,'payType')); fsel('f1thn',uniq(d1,'tahun').reverse());
+  fsel('fhpay',uniq(dh,'payType')); fsel('fhthn',uniq(dh,'tahun').reverse());
+  // Expense bulan filter
+  fsel('fhbln',usort(rows,'bulan','bsort'));
+  fsel('fplok',uniq(rows,'lokasi')); fsel('fppay',uniq(rows,'payType'));
+  fsel('fpbln',usort(rows,'bulan','bsort')); fsel('fpkat',CATK);
+}
+
+function uniq(d,k){var s={};d.forEach(function(r){if(r[k])s[r[k]]=1;});return Object.keys(s).sort();}
+function usort(d,k,sk){var m={};d.forEach(function(r){if(r[k])m[r[k]]=r[sk]||0;});
+  return Object.keys(m).sort(function(a,b){return m[a]-m[b];});}
+function fsel(id,opts){
+  var el=document.getElementById(id);if(!el)return;
+  var cur=el.value;
+  el.innerHTML=el.options[0].outerHTML+opts.map(function(o){return'<option value="'+o+'">'+o+'</option>';}).join('');
+  if(cur)el.value=cur;
+}
+function rf(tab){
+  if(tab==='1hc'){sv('f1lok','');sv('f1pay','');sv('f1thn','');aktif['1hc']={};d1hc();}
+  if(tab==='hc') {sv('fhpay','');sv('fhthn','');sv('fhbln','');aktif['hc']={};dhc();}
+  if(tab==='price'){sv('fplok','');sv('fppay','');sv('fpbln','');sv('fpkat','');dprice();}
+}
+function sv(id,v){var e=document.getElementById(id);if(e)e.value=v;}
+function gv(id){var e=document.getElementById(id);return e?e.value:'';}
+
+// ════════════════════════════════════════
+// TAB
+// ════════════════════════════════════════
+function goTab(tab,btn){
+  document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});
+  document.querySelectorAll('.ntab').forEach(function(t){t.classList.remove('on');});
+  document.getElementById('pg-'+tab).classList.add('on');
+  btn.classList.add('on');
+}
+
+// ════════════════════════════════════════
+// DRAW 1HC
+// ════════════════════════════════════════
+function d1hc(){
+  var data=rows.filter(function(r){
+    return !r.isHC&&(!gv('f1lok')||r.lokasi===gv('f1lok'))&&
+      (!gv('f1pay')||r.payType===gv('f1pay'))&&(!gv('f1thn')||r.tahun===gv('f1thn'));
+  });
+  snap['1hc']=data; aktif['1hc']={};
+  drawStats('st1hc',data);
+  drawChart('ch1hc','leg1hc','ct1hc','1hc',data);
+  drawTable('tb1hc','tc1hc',data,false);
+}
+
+// ════════════════════════════════════════
+// DRAW HOMECARE
+// ════════════════════════════════════════
+function dhc(){
+  var data=rows.filter(function(r){
+    return r.isHC&&(!gv('fhpay')||r.payType===gv('fhpay'))&&(!gv('fhthn')||r.tahun===gv('fhthn'));
+  });
+  snap['hc']=data; aktif['hc']={};
+  drawProfitRow(data);
+  drawStats('sthc',data);
+  drawChart('chhc','leghc','cthc','hc',data);
+  drawTable('tbhc','tchc',data,false);
+  renderExpenseHistory();
+}
+
+// ════════════════════════════════════════
+// PROFIT ROW
+// ════════════════════════════════════════
+function drawProfitRow(data){
+  var bln=gv('fhbln');
+  var filtered=bln?data.filter(function(r){return r.bulan===bln;}):data;
+  var totalPend=filtered.reduce(function(s,r){return s+r.pend;},0);
+
+  // Get expense for selected period or sum all
+  var totalExp=0;
+  if(bln){
+    var ex=expenses[bln];
+    if(ex) totalExp=(ex.marketing||0)+(ex.bhp||0)+(ex.equipment||0)+(ex.insentif||0);
+  } else {
+    Object.values(expenses).forEach(function(ex){
+      totalExp+=(ex.marketing||0)+(ex.bhp||0)+(ex.equipment||0)+(ex.insentif||0);
+    });
+  }
+
+  var profit=totalPend-totalExp;
+  var isPos=profit>=0;
+  var margin=totalPend>0?Math.round(profit/totalPend*100):0;
+
+  document.getElementById('profit-row').innerHTML=
+    '<div class="profit-card"><div class="profit-card-label">Total Pendapatan</div>'+
+    '<div class="profit-card-val" style="color:var(--blue)">Rp '+fmtN(totalPend)+'</div>'+
+    '<div class="profit-card-sub">'+(bln||'Semua periode')+'</div></div>'+
+
+    '<div class="profit-card"><div class="profit-card-label">Total Expense</div>'+
+    '<div class="profit-card-val" style="color:var(--amber)">Rp '+fmtN(totalExp)+'</div>'+
+    '<div class="profit-card-sub">Marketing+BHP+Equipment+Insentif</div></div>'+
+
+    '<div class="profit-card '+(isPos?'positive':'negative')+'">'+
+    '<div class="profit-card-label">Net Profit</div>'+
+    '<div class="profit-card-val">Rp '+fmtN(profit)+'</div>'+
+    '<div class="profit-card-sub">Margin '+margin+'%</div></div>';
+}
+
+// ════════════════════════════════════════
+// EXPENSE
+// ════════════════════════════════════════
+function saveExpense(){
+  var bln=gv('ebln'); var thn=gv('ethn');
+  var key=bln+'-'+thn;
+  expenses[key]={
+    marketing:parseFloat(document.getElementById('e-marketing').value)||0,
+    bhp:parseFloat(document.getElementById('e-bhp').value)||0,
+    equipment:parseFloat(document.getElementById('e-equipment').value)||0,
+    insentif:parseFloat(document.getElementById('e-insentif').value)||0
+  };
+  saveExpLS();
+  renderExpenseHistory();
+  drawProfitRow(snap['hc']);
+  // Clear inputs
+  ['e-marketing','e-bhp','e-equipment','e-insentif'].forEach(function(id){
+    document.getElementById(id).value='';
+  });
+}
+
+function renderExpenseHistory(){
+  var bln=gv('fhbln');
+  var keys=Object.keys(expenses).sort();
+  if(bln) keys=keys.filter(function(k){return k===bln;});
+  if(!keys.length){
+    document.getElementById('exp-hist-table').innerHTML=
+      '<div style="font-size:12px;color:var(--text3);padding:8px 0">Belum ada data expense.</div>';
     return;
   }
-
-  const rows = data.map(r => {
-    const price = getPayerPrice(r);
-    return `<tr>
-      <td class="muted mono" style="font-size:11px">${r.date ? r.date.split(',')[0] : r.bulan}</td>
-      <td>${r.nama || '—'}</td>
-      <td>${r.lokasi}</td>
-      <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r.layanan}">${r.layanan}</td>
-      <td><span class="badge badge-${r.kat}">${CATS[r.kat]?.label||r.kat}</span></td>
-      <td class="mono" style="text-align:right">${price !== null ? 'Rp '+fmtN(price) : '<span style="color:var(--muted)">—</span>'}</td>
-    </tr>`;
+  var rows2=keys.map(function(k){
+    var ex=expenses[k];
+    var total=(ex.marketing||0)+(ex.bhp||0)+(ex.equipment||0)+(ex.insentif||0);
+    return '<tr>'+
+      '<td class="mono">'+k+'</td>'+
+      '<td class="right mono">'+fmtN(ex.marketing||0)+'</td>'+
+      '<td class="right mono">'+fmtN(ex.bhp||0)+'</td>'+
+      '<td class="right mono">'+fmtN(ex.equipment||0)+'</td>'+
+      '<td class="right mono">'+fmtN(ex.insentif||0)+'</td>'+
+      '<td class="right mono" style="color:var(--amber);font-weight:600">'+fmtN(total)+'</td>'+
+      '<td><button onclick="delExp(\''+k+'\')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px;font-family:inherit;padding:0">hapus</button></td>'+
+    '</tr>';
   }).join('');
-
-  document.getElementById('table-price').innerHTML = `
-    <table>
-      <thead><tr><th>Tanggal</th><th>Nama</th><th>Lokasi</th><th>Prosedur</th><th>Kategori</th><th style="text-align:right">Price</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>`;
+  document.getElementById('exp-hist-table').innerHTML=
+    '<table><thead><tr>'+
+    '<th>Periode</th><th style="text-align:right">Marketing</th><th style="text-align:right">BHP</th>'+
+    '<th style="text-align:right">Equipment</th><th style="text-align:right">Insentif</th>'+
+    '<th style="text-align:right">Total</th><th></th>'+
+    '</tr></thead><tbody>'+rows2+'</tbody></table>';
 }
 
-function getPayerPrice(r) {
-  const key = r.paymentType + '|' + r.layanan.toUpperCase();
-  if (payerPriceMap[key] !== undefined) return payerPriceMap[key];
-  // fallback to base price
-  const base = basePriceMap[r.layanan.toUpperCase()];
-  return base !== undefined ? base : null;
+function delExp(key){
+  delete expenses[key]; saveExpLS();
+  renderExpenseHistory(); drawProfitRow(snap['hc']);
 }
 
-// ── Shared: Stats ─────────────────────────────────────────────
-function renderStats(tab, data) {
-  const total    = data.length;
-  const suntik   = data.filter(r => r.kat === 'suntik').length;
-  const infus    = data.filter(r => r.kat === 'infus').length;
-  const vaksin   = data.filter(r => r.kat === 'vaksin').length;
-  const konsul   = data.filter(r => r.kat === 'konsultasi').length;
-
-  document.getElementById('stats-' + tab).innerHTML = `
-    <div class="stat-card"><div class="stat-label">Total Kunjungan</div><div class="stat-value accent">${fmt(total)}</div><div class="stat-sub">semua kategori</div></div>
-    <div class="stat-card"><div class="stat-label">Suntik</div><div class="stat-value" style="color:var(--violet)">${fmt(suntik)}</div><div class="stat-sub">${pct(suntik,total)}% dari total</div></div>
-    <div class="stat-card"><div class="stat-label">Infus</div><div class="stat-value" style="color:var(--teal)">${fmt(infus)}</div><div class="stat-sub">${pct(infus,total)}% dari total</div></div>
-    <div class="stat-card"><div class="stat-label">Vaksin</div><div class="stat-value" style="color:var(--pink)">${fmt(vaksin)}</div><div class="stat-sub">${pct(vaksin,total)}% dari total</div></div>
-    <div class="stat-card"><div class="stat-label">Konsultasi</div><div class="stat-value" style="color:var(--accent-dim)">${fmt(konsul)}</div><div class="stat-sub">${pct(konsul,total)}% dari total</div></div>
-  `;
-}
-
-// ── Shared: Chart ─────────────────────────────────────────────
-// Active kategori per tab
-const activeKats = { '1hc': new Set(), 'homecare': new Set() };
-
-function toggleKat(tab, kat) {
-  const active = activeKats[tab];
-  if (active.has(kat)) { active.delete(kat); } else { active.add(kat); }
-  renderChartAndTable(tab);
-}
-
-function renderChartAndTable(tab) {
-  const baseData = filteredData[tab] || [];
-  const active = activeKats[tab];
-  const filtered = active.size > 0 ? baseData.filter(r => active.has(r.kat)) : baseData;
-  renderChart(tab, baseData, active);
-  renderTable(tab, filtered);
-  const countEl = document.getElementById('count-' + tab);
-  if (countEl) countEl.textContent = filtered.length + ' rows';
-}
-
-function renderChart(tab, data, activeSet) {
-  // Group by bulan
-  const bulanMap = {};
-  data.forEach(r => {
-    if (!r.bulan) return;
-    if (!bulanMap[r.bulan]) bulanMap[r.bulan] = { bulanSort: r.bulanSort, suntik:0, infus:0, vaksin:0, konsultasi:0, other:0 };
-    bulanMap[r.bulan][r.kat] = (bulanMap[r.bulan][r.kat] || 0) + 1;
+// ════════════════════════════════════════
+// DRAW PRICE
+// ════════════════════════════════════════
+function dprice(){
+  var data=rows.filter(function(r){
+    return(!gv('fplok')||r.lokasi===gv('fplok'))&&
+      (!gv('fppay')||r.payType===gv('fppay'))&&
+      (!gv('fpbln')||r.bulan===gv('fpbln'))&&
+      (!gv('fpkat')||r.kat===gv('fpkat'));
   });
+  snap['price']=data;
+  var withP=data.filter(function(r){return getPrice(r)!==null;}).length;
+  document.getElementById('stprice').innerHTML=
+    sc('Total Kunjungan',N(data.length),'semua data','green')+
+    sc('Ada Price Data',N(withP),pct(withP,data.length)+'% tercover','blue')+
+    sc('Tanpa Price',N(data.length-withP),'perlu mapping','amber');
+  drawTable('tbprice','tcprice',data,true);
+}
 
-  const sorted = Object.entries(bulanMap).sort((a,b) => a[1].bulanSort - b[1].bulanSort);
-  const labels = sorted.map(([b]) => b);
-  const catKeys = ['suntik','infus','vaksin','konsultasi','other'];
-  const active = activeSet || new Set();
+// ════════════════════════════════════════
+// STATS
+// ════════════════════════════════════════
+function drawStats(id,data){
+  var tot=data.length;
+  var s=data.filter(function(r){return r.kat==='suntik';}).length;
+  var i=data.filter(function(r){return r.kat==='infus';}).length;
+  var v=data.filter(function(r){return r.kat==='vaksin';}).length;
+  var k=data.filter(function(r){return r.kat==='konsultasi';}).length;
+  var pend=data.reduce(function(a,r){return a+r.pend;},0);
+  document.getElementById(id).innerHTML=
+    sc('Total Kunjungan',N(tot),'semua kategori','green')+
+    sc('Total Pendapatan','Rp '+fmtN(pend),'billed amount','blue')+
+    sc('Suntik',N(s),pct(s,tot)+'% dari total','purple')+
+    sc('Infus',N(i),pct(i,tot)+'% dari total','teal')+
+    sc('Vaksin',N(v),pct(v,tot)+'% dari total','amber');
+}
 
-  const datasets = catKeys.map(k => {
-    const isActive = active.size === 0 || active.has(k);
-    return {
-      label: CATS[k].label,
-      data: sorted.map(([,v]) => v[k] || 0),
-      backgroundColor: isActive ? CATS[k].color + 'CC' : CATS[k].color + '22',
-      borderColor: isActive ? CATS[k].color : CATS[k].color + '44',
-      borderWidth: 1,
-      borderRadius: 3
-    };
+function sc(label,val,sub,color){
+  return '<div class="sc sc-'+color+'">'+
+    '<div class="sc-label">'+label+'</div>'+
+    '<div class="sc-val">'+val+'</div>'+
+    '<div class="sc-sub">'+sub+'</div></div>';
+}
+
+// ════════════════════════════════════════
+// CHART MODE
+// ════════════════════════════════════════
+function setMode(tab,mode,btn){
+  modes[tab]=mode;
+  var wrap=btn.closest('.tog-wrap');
+  wrap.querySelectorAll('.tog').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');
+  var titles={kunjungan:'Tren Kunjungan per Bulan',pendapatan:'Total Pendapatan per Bulan (Rp)',avg:'Rata-rata Pendapatan / Kunjungan'};
+  var ctId=tab==='1hc'?'ct1hc':'cthc';
+  document.getElementById(ctId).textContent=titles[mode];
+  var legId=tab==='1hc'?'leg1hc':'leghc';
+  document.getElementById(legId).style.display=mode==='kunjungan'?'flex':'none';
+  var base=snap[tab];
+  drawChart(tab==='1hc'?'ch1hc':'chhc',legId,ctId,tab,base);
+}
+
+// ════════════════════════════════════════
+// CHART
+// ════════════════════════════════════════
+function drawChart(canvasId,legId,titleId,tab,data){
+  var bmap={};
+  data.forEach(function(r){
+    if(!r.bulan)return;
+    if(!bmap[r.bulan])bmap[r.bulan]={bs:r.bsort,suntik:0,infus:0,vaksin:0,konsultasi:0,other:0,pend:0,cnt:0};
+    bmap[r.bulan][r.kat]=(bmap[r.bulan][r.kat]||0)+1;
+    bmap[r.bulan].pend+=r.pend; bmap[r.bulan].cnt++;
   });
+  var sorted=Object.keys(bmap).sort(function(a,b){return bmap[a].bs-bmap[b].bs;});
+  var ak=aktif[tab]; var hasF=Object.keys(ak).length>0;
+  var mode=modes[tab]||'kunjungan';
 
-  const canvasId = 'chart-' + tab;
-  if (charts[tab]) { charts[tab].destroy(); }
+  var datasets,tickCb,tipCb;
+  if(mode==='kunjungan'){
+    datasets=CATK.map(function(k){
+      var on=!hasF||ak[k];
+      return{label:CATS[k].l,data:sorted.map(function(b){return bmap[b][k]||0;}),
+        backgroundColor:on?CATS[k].c+'AA':CATS[k].c+'18',
+        borderColor:on?CATS[k].c:CATS[k].c+'20',borderWidth:1.5,borderRadius:3};
+    });
+    tickCb=function(v){return v;};
+    tipCb=function(ctx){return ' '+ctx.dataset.label+': '+N(ctx.parsed.y);};
+  } else if(mode==='pendapatan'){
+    datasets=[{label:'Pendapatan',data:sorted.map(function(b){return bmap[b].pend||0;}),
+      backgroundColor:'rgba(74,158,255,0.5)',borderColor:'#4A9EFF',borderWidth:1.5,borderRadius:3}];
+    tickCb=function(v){return 'Rp '+fmtN(v);};
+    tipCb=function(ctx){return ' Rp '+fmtN(ctx.parsed.y);};
+  } else {
+    datasets=[{label:'Rata-rata',data:sorted.map(function(b){return bmap[b].cnt?Math.round(bmap[b].pend/bmap[b].cnt):0;}),
+      backgroundColor:'rgba(0,196,140,0.5)',borderColor:'#00C48C',borderWidth:1.5,borderRadius:3}];
+    tickCb=function(v){return 'Rp '+fmtN(v);};
+    tipCb=function(ctx){return ' Rp '+fmtN(ctx.parsed.y)+'/kunjungan';};
+  }
 
-  const ctx = document.getElementById(canvasId).getContext('2d');
-  charts[tab] = new Chart(ctx, {
-    type: 'bar',
-    data: { labels, datasets },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: { backgroundColor: '#212120', titleColor: '#F0EDE6', bodyColor: '#7A7872', borderColor: '#2E2E2C', borderWidth: 1 }
-      },
-      scales: {
-        x: { stacked: false, ticks: { color: '#7A7872', font: { size: 11, family: 'DM Mono' } }, grid: { color: '#2E2E2C' } },
-        y: { stacked: false, ticks: { color: '#7A7872', font: { size: 11 } }, grid: { color: '#2E2E2C' } }
-      }
+  if(charts[tab])charts[tab].destroy();
+  var ctx=document.getElementById(canvasId).getContext('2d');
+  charts[tab]=new Chart(ctx,{type:'bar',data:{labels:sorted,datasets:datasets},options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{
+      backgroundColor:'#142233',titleColor:'#E8EFF8',bodyColor:'#8BA5C0',
+      borderColor:'#2A4060',borderWidth:1,padding:12,cornerRadius:8,boxPadding:4,
+      callbacks:{label:tipCb}
+    }},
+    scales:{
+      x:{stacked:false,ticks:{color:'#5A7A9A',font:{size:11,family:'JetBrains Mono'}},grid:{color:'rgba(42,64,96,0.5)'},border:{color:'#2A4060'}},
+      y:{stacked:false,ticks:{color:'#5A7A9A',font:{size:11},callback:tickCb},grid:{color:'rgba(42,64,96,0.5)'},border:{color:'#2A4060'}}
     }
-  });
+  }});
 
   // Legend
-  const legendEl = document.getElementById('legend-' + tab);
-  legendEl.innerHTML = '';
-  catKeys.forEach(k => {
-    const isActive = active.size === 0 || active.has(k);
-    const cls = active.size === 0 ? '' : (isActive ? 'active' : 'inactive');
-    const item = document.createElement('div');
-    item.className = 'legend-item ' + cls;
-    item.innerHTML = '<div class="legend-dot" style="background:' + CATS[k].color + '"></div>' + CATS[k].label;
-    item.addEventListener('click', (function(t,kk){ return function(){ toggleKat(t,kk); }; })(tab, k));
-    legendEl.appendChild(item);
+  var legEl=document.getElementById(legId);
+  if(!legEl)return;
+  legEl.innerHTML='';
+  CATK.forEach(function(k){
+    var on=!hasF||ak[k];
+    var pill=document.createElement('div');
+    pill.className='lp'+(hasF?(on?' on':' off'):'');
+    pill.innerHTML='<div class="lp-dot" style="background:'+CATS[k].c+'"></div>'+CATS[k].l;
+    pill.setAttribute('data-tab',tab); pill.setAttribute('data-kat',k);
+    pill.onclick=function(){
+      var t=this.getAttribute('data-tab'); var k2=this.getAttribute('data-kat');
+      var ak2=aktif[t];
+      if(ak2[k2])delete ak2[k2]; else ak2[k2]=true;
+      var base=snap[t]; var hasF2=Object.keys(ak2).length>0;
+      var filtered=hasF2?base.filter(function(r){return ak2[r.kat];}):base;
+      drawChart(t==='1hc'?'ch1hc':'chhc',t==='1hc'?'leg1hc':'leghc',t==='1hc'?'ct1hc':'cthc',t,base);
+      drawTable(t==='1hc'?'tb1hc':'tbhc',t==='1hc'?'tc1hc':'tchc',filtered,false);
+    };
+    legEl.appendChild(pill);
   });
 }
 
-// ── Shared: Table ─────────────────────────────────────────────
-function renderTable(tab, data) {
-  const countEl = document.getElementById('count-' + tab);
-  const tableEl = document.getElementById('table-' + tab);
-  if (!countEl || !tableEl) return;
-
-  countEl.textContent = data.length + ' rows';
-  if (!data.length) {
-    tableEl.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div>Tidak ada data</div></div>';
+// ════════════════════════════════════════
+// TABLE
+// ════════════════════════════════════════
+function drawTable(tbId,tcId,data,isPrice){
+  document.getElementById(tcId).textContent=N(data.length)+' baris';
+  if(!data.length){
+    document.getElementById(tbId).innerHTML='<div class="empty-row">Tidak ada data</div>';
     return;
   }
-
-  const rows = data.map(r => {
-    const price = getPayerPrice(r);
-    return `<tr>
-      <td class="muted mono" style="font-size:11px">${r.date ? r.date.split(',')[0] : r.bulan}</td>
-      <td>${r.nama || '—'}</td>
-      <td>${r.lokasi}</td>
-      <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r.layanan}">${r.layanan}</td>
-      <td><span class="badge badge-${r.kat}">${CATS[r.kat]?.label||r.kat}</span></td>
-      <td class="muted" style="font-size:12px">${r.paymentType||'—'}</td>
-      <td class="mono" style="text-align:right">${price !== null ? 'Rp '+fmtN(price) : '<span style="color:var(--muted2)">—</span>'}</td>
-    </tr>`;
+  var body=data.map(function(r){
+    var p=getPrice(r);
+    return '<tr>'+
+      '<td class="mono">'+fmtDate(r.date)+'</td>'+
+      '<td>'+esc(r.nama||'—')+'</td>'+
+      '<td class="dim">'+esc(r.lokasi)+'</td>'+
+      '<td style="max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(r.layanan)+'">'+esc(r.layanan)+'</td>'+
+      '<td><span class="bdg '+CATS[r.kat].bdg+'">'+CATS[r.kat].l+'</span></td>'+
+      '<td class="dim" style="font-size:11px">'+esc(r.payType||'—')+'</td>'+
+      '<td class="mono right">'+(p!==null?'Rp '+fmtN(p):'<span style="color:var(--text3)">—</span>')+'</td>'+
+    '</tr>';
   }).join('');
-
-  tableEl.innerHTML = `
-    <table>
-      <thead><tr><th>Tanggal</th><th>Nama</th><th>Lokasi</th><th>Prosedur</th><th>Kategori</th><th>Payment Type</th><th style="text-align:right">Price</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>`;
+  document.getElementById(tbId).innerHTML=
+    '<table><thead><tr><th>Tanggal</th><th>Nama</th><th>Lokasi</th><th>Prosedur</th><th>Kategori</th><th>Payment Type</th><th style="text-align:right">Price</th></tr></thead><tbody>'+body+'</tbody></table>';
 }
 
-// ── Export CSV ────────────────────────────────────────────────
-function exportCSV(tab) {
-  const data = filteredData[tab] || [];
-  if (!data.length) return;
-  const header = 'Tanggal,Nama,Lokasi,Prosedur,Kategori,Payment Type,Price';
-  const rows = data.map(r => {
-    const price = getPayerPrice(r);
-    return [
-      r.date ? r.date.split(',')[0] : r.bulan,
-      r.nama, r.lokasi,
-      `"${r.layanan}"`,
-      CATS[r.kat]?.label || r.kat,
-      r.paymentType,
-      price !== null ? price : ''
-    ].join(',');
+// ════════════════════════════════════════
+// EXPORT
+// ════════════════════════════════════════
+function doExport(tab){
+  var data=snap[tab]||[]; if(!data.length)return;
+  var lines=['Tanggal,Nama,Lokasi,Prosedur,Kategori,Payment Type,Price'];
+  data.forEach(function(r){
+    var p=getPrice(r);
+    lines.push([fmtDate(r.date),r.nama,r.lokasi,'"'+r.layanan+'"',CATS[r.kat].l,r.payType,p!==null?p:''].join(','));
   });
-  const blob = new Blob([header+'\n'+rows.join('\n')], {type:'text/csv'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `oneklinik_${tab}_${new Date().toISOString().slice(0,10)}.csv`;
+  var blob=new Blob([lines.join('\n')],{type:'text/csv'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='oneklinik_'+tab+'_'+new Date().toISOString().slice(0,10)+'.csv';
   a.click();
 }
 
-// ── Helpers ───────────────────────────────────────────────────
-function fmt(n)    { return (n||0).toLocaleString('id-ID'); }
-function fmtN(n)   { return Math.round(n||0).toLocaleString('id-ID'); }
-function pct(a,b)  { return b ? Math.round(a/b*100) : 0; }
+// ════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════
+function N(n){return(n||0).toLocaleString('id-ID');}
+function fmtN(n){return Math.round(n||0).toLocaleString('id-ID');}
+function pct(a,b){return b?Math.round(a/b*100):0;}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function fmtDate(d){return d?(d+'').split(',')[0]:'-';}
+
+window.onload=function(){initLS();};
 </script>
 </body>
 </html>
