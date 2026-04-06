@@ -611,13 +611,17 @@ function renderChart(tab, data, activeSet) {
   });
 
   // Legend
-  document.getElementById('legend-' + tab).innerHTML = catKeys.map(k => {
+  const legendEl = document.getElementById('legend-' + tab);
+  legendEl.innerHTML = '';
+  catKeys.forEach(k => {
     const isActive = active.size === 0 || active.has(k);
     const cls = active.size === 0 ? '' : (isActive ? 'active' : 'inactive');
-    return `<div class="legend-item ${cls}" onclick="toggleKat('${tab}','${k}')">
-      <div class="legend-dot" style="background:${CATS[k].color}"></div>${CATS[k].label}
-    </div>`;
-  }).join('');
+    const item = document.createElement('div');
+    item.className = 'legend-item ' + cls;
+    item.innerHTML = '<div class="legend-dot" style="background:' + CATS[k].color + '"></div>' + CATS[k].label;
+    item.addEventListener('click', (function(t,kk){ return function(){ toggleKat(t,kk); }; })(tab, k));
+    legendEl.appendChild(item);
+  });
 }
 
 // ── Shared: Table ─────────────────────────────────────────────
