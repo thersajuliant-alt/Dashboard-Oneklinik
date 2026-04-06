@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>OneKlinik Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0F0F0D;
+  --surface:#181816;
+  --surface2:#212120;
+  --surface3:#2A2A28;
+  --border:#2E2E2C;
+  --border2:#3A3A38;
+  --text:#F0EDE6;
+  --muted:#7A7872;
+  --muted2:#5A5852;
+  --accent:#C8F560;
+  --accent-dim:#8FB33A;
+  --accent2:#F5A623;
+  --teal:#4ECDC4;
+  --coral:#FF6B6B;
+  --violet:#A78BFA;
+  --pink:#F472B6;
+  --radius:12px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5}
+
+/* UPLOAD SCREEN */
+#uploadScreen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px}
+.upload-brand{font-family:'Syne',sans-serif;font-size:28px;font-weight:700;letter-spacing:-0.5px;margin-bottom:6px}
+.upload-brand span{color:var(--accent)}
+.upload-sub{color:var(--muted);font-size:14px;margin-bottom:48px}
+.upload-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;width:100%;max-width:800px;margin-bottom:32px}
+.upload-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden}
+.upload-card:hover{border-color:var(--border2);background:var(--surface2)}
+.upload-card.loaded{border-color:var(--accent);background:rgba(200,245,96,0.05)}
+.upload-card-icon{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;font-size:18px}
+.icon-emr{background:rgba(78,205,196,0.15);color:var(--teal)}
+.icon-price{background:rgba(200,245,96,0.15);color:var(--accent)}
+.icon-payer{background:rgba(245,166,35,0.15);color:var(--accent2)}
+.upload-card-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:600;margin-bottom:4px}
+.upload-card-desc{font-size:12px;color:var(--muted);line-height:1.5}
+.upload-card-status{font-size:11px;margin-top:10px;font-weight:500}
+.status-waiting{color:var(--muted2)}
+.status-loaded{color:var(--accent)}
+.upload-card input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.launch-btn{background:var(--accent);color:#0F0F0D;border:none;padding:14px 40px;border-radius:99px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:0.3px;transition:all 0.2s;opacity:0.3;pointer-events:none}
+.launch-btn.ready{opacity:1;pointer-events:all}
+.launch-btn.ready:hover{background:#d4ff6a;transform:scale(1.02)}
+
+/* APP */
+#app{display:none;min-height:100vh;flex-direction:column}
+
+/* HEADER */
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:100}
+.brand{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;letter-spacing:-0.3px}
+.brand span{color:var(--accent)}
+.header-right{display:flex;align-items:center;gap:8px}
+.reset-btn{background:none;border:1px solid var(--border);border-radius:7px;padding:6px 12px;font-family:inherit;font-size:12px;color:var(--muted);cursor:pointer;transition:all 0.15s}
+.reset-btn:hover{border-color:var(--border2);color:var(--text)}
+
+/* NAV */
+.nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;gap:2px}
+.nav-tab{padding:12px 18px;font-size:13px;font-weight:500;color:var(--muted);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.15s;font-family:'Syne',sans-serif;letter-spacing:0.2px}
+.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.nav-tab:hover:not(.active){color:var(--text)}
+
+/* MAIN */
+.main{padding:24px;flex:1}
+.page{display:none}
+.page.active{display:block}
+
+/* FILTERS */
+.filter-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;align-items:flex-end}
+.filter-group{display:flex;flex-direction:column;gap:4px}
+.filter-label{font-size:10px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:0.8px}
+.filter-group select{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-family:inherit;font-size:13px;color:var(--text);outline:none;min-width:150px;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237A7872' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+.filter-group select:focus{border-color:var(--accent)}
+.filter-reset{background:none;border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-family:inherit;font-size:12px;color:var(--muted);cursor:pointer;align-self:flex-end;transition:all 0.15s}
+.filter-reset:hover{color:var(--text);border-color:var(--border2)}
+
+/* STAT CARDS */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px}
+.stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px}
+.stat-value{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.5px;color:var(--text)}
+.stat-value.accent{color:var(--accent)}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:3px}
+
+/* CHART */
+.chart-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:24px}
+.chart-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:600;margin-bottom:16px;color:var(--muted)}
+.chart-canvas-wrap{position:relative;height:260px}
+
+/* TABLE */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.table-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.table-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:600}
+.table-meta{font-size:11px;color:var(--muted);display:flex;gap:12px;align-items:center}
+.export-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-family:inherit;font-size:11px;color:var(--muted);cursor:pointer;transition:all 0.15s}
+.export-btn:hover{border-color:var(--accent);color:var(--accent)}
+.table-scroll{overflow-x:auto;max-height:480px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;min-width:600px}
+thead th{padding:10px 14px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);background:var(--surface2);border-bottom:1px solid var(--border);position:sticky;top:0}
+tbody tr{border-bottom:1px solid var(--border);transition:background 0.1s}
+tbody tr:hover{background:var(--surface2)}
+tbody tr:last-child{border-bottom:none}
+td{padding:10px 14px;font-size:13px;color:var(--text)}
+td.mono{font-family:'DM Mono',monospace;font-size:12px}
+td.muted{color:var(--muted)}
+.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500;font-family:'DM Mono',monospace}
+.badge-suntik{background:rgba(167,139,250,0.15);color:var(--violet)}
+.badge-infus{background:rgba(78,205,196,0.15);color:var(--teal)}
+.badge-vaksin{background:rgba(244,114,182,0.15);color:var(--pink)}
+.badge-konsultasi{background:rgba(200,245,96,0.12);color:var(--accent-dim)}
+.badge-other{background:rgba(122,120,114,0.2);color:var(--muted)}
+.empty{padding:48px;text-align:center;color:var(--muted)}
+.empty-icon{font-size:28px;margin-bottom:8px}
+
+/* LEGEND */
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+.legend-dot{width:8px;height:8px;border-radius:50%}
+</style>
+</head>
+<body>
+
+<!-- UPLOAD SCREEN -->
+<div id="uploadScreen">
+  <div class="upload-brand">One<span>Klinik</span></div>
+  <div class="upload-sub">Upload 3 file CSV untuk memulai dashboard</div>
+
+  <div class="upload-grid">
+    <div class="upload-card" id="card-emr">
+      <input type="file" accept=".csv" onchange="handleFile('emr',this)"/>
+      <div class="upload-card-icon icon-emr">📋</div>
+      <div class="upload-card-title">EMR Data</div>
+      <div class="upload-card-desc">File Data.csv dari sheet Efektivitas Promo</div>
+      <div class="upload-card-status status-waiting" id="status-emr">Belum diupload</div>
+    </div>
+    <div class="upload-card" id="card-price">
+      <input type="file" accept=".csv" onchange="handleFile('price',this)"/>
+      <div class="upload-card-icon icon-price">💰</div>
+      <div class="upload-card-title">Base Price</div>
+      <div class="upload-card-desc">Procedures Master List CSV</div>
+      <div class="upload-card-status status-waiting" id="status-price">Belum diupload</div>
+    </div>
+    <div class="upload-card" id="card-payer">
+      <input type="file" accept=".csv" onchange="handleFile('payer',this)"/>
+      <div class="upload-card-icon icon-payer">🏦</div>
+      <div class="upload-card-title">Payer Price</div>
+      <div class="upload-card-desc">Procedures Pricing by Payer CSV</div>
+      <div class="upload-card-status status-waiting" id="status-payer">Belum diupload</div>
+    </div>
+  </div>
+
+  <button class="launch-btn" id="launchBtn" onclick="launchApp()">Buka Dashboard →</button>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="header">
+    <div class="brand">One<span>Klinik</span> <span style="font-size:11px;color:var(--muted);font-family:'DM Sans';font-weight:400;margin-left:4px">Dashboard</span></div>
+    <div class="header-right">
+      <button class="reset-btn" onclick="resetApp()">← Ganti File</button>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="nav-tab active" onclick="showTab('1hc',this)">1HC</button>
+    <button class="nav-tab" onclick="showTab('homecare',this)">Homecare</button>
+    <button class="nav-tab" onclick="showTab('price',this)">Price Dashboard</button>
+  </div>
+
+  <div class="main">
+
+    <!-- 1HC TAB -->
+    <div class="page active" id="page-1hc">
+      <div class="filter-row">
+        <div class="filter-group"><span class="filter-label">Klinik</span><select id="f1-lokasi" onchange="render1HC()"><option value="">Semua</option></select></div>
+        <div class="filter-group"><span class="filter-label">Payment Type</span><select id="f1-payer" onchange="render1HC()"><option value="">Semua</option></select></div>
+        <div class="filter-group"><span class="filter-label">Tahun</span><select id="f1-tahun" onchange="render1HC()"><option value="">Semua</option></select></div>
+        <button class="filter-reset" onclick="resetFilters('1hc')">Reset</button>
+      </div>
+      <div class="stats-row" id="stats-1hc"></div>
+      <div class="chart-wrap">
+        <div class="chart-title">Kunjungan per Bulan</div>
+        <div class="legend" id="legend-1hc"></div>
+        <div class="chart-canvas-wrap"><canvas id="chart-1hc"></canvas></div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-header">
+          <span class="table-title">Detail Kunjungan</span>
+          <div class="table-meta">
+            <span id="count-1hc">0 rows</span>
+            <button class="export-btn" onclick="exportCSV('1hc')">Export CSV</button>
+          </div>
+        </div>
+        <div class="table-scroll"><div id="table-1hc"></div></div>
+      </div>
+    </div>
+
+    <!-- HOMECARE TAB -->
+    <div class="page" id="page-homecare">
+      <div class="filter-row">
+        <div class="filter-group"><span class="filter-label">Payment Type</span><select id="fh-payer" onchange="renderHomecare()"><option value="">Semua</option></select></div>
+        <div class="filter-group"><span class="filter-label">Tahun</span><select id="fh-tahun" onchange="renderHomecare()"><option value="">Semua</option></select></div>
+        <button class="filter-reset" onclick="resetFilters('homecare')">Reset</button>
+      </div>
+      <div class="stats-row" id="stats-homecare"></div>
+      <div class="chart-wrap">
+        <div class="chart-title">Kunjungan per Bulan</div>
+        <div class="legend" id="legend-homecare"></div>
+        <div class="chart-canvas-wrap"><canvas id="chart-homecare"></canvas></div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-header">
+          <span class="table-title">Detail Kunjungan</span>
+          <div class="table-meta">
+            <span id="count-homecare">0 rows</span>
+            <button class="export-btn" onclick="exportCSV('homecare')">Export CSV</button>
+          </div>
+        </div>
+        <div class="table-scroll"><div id="table-homecare"></div></div>
+      </div>
+    </div>
+
+    <!-- PRICE DASHBOARD TAB -->
+    <div class="page" id="page-price">
+      <div class="filter-row">
+        <div class="filter-group"><span class="filter-label">Klinik</span><select id="fp-lokasi" onchange="renderPrice()"><option value="">Semua</option></select></div>
+        <div class="filter-group"><span class="filter-label">Payment Type</span><select id="fp-payer" onchange="renderPrice()"><option value="">Semua</option></select></div>
+        <div class="filter-group"><span class="filter-label">Bulan</span><select id="fp-bulan" onchange="renderPrice()"><option value="">Semua</option></select></div>
+        <div class="filter-group"><span class="filter-label">Kategori</span><select id="fp-kat" onchange="renderPrice()"><option value="">Semua</option></select></div>
+        <button class="filter-reset" onclick="resetFilters('price')">Reset</button>
+      </div>
+      <div class="stats-row" id="stats-price"></div>
+      <div class="table-wrap">
+        <div class="table-header">
+          <span class="table-title">Price Dashboard</span>
+          <div class="table-meta">
+            <span id="count-price">0 rows</span>
+            <button class="export-btn" onclick="exportCSV('price')">Export CSV</button>
+          </div>
+        </div>
+        <div class="table-scroll"><div id="table-price"></div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────
+let rawEMR = [], basePriceMap = {}, payerPriceMap = {};
+let loaded = { emr: false, price: false, payer: false };
+let charts = {};
+let filteredData = { '1hc': [], homecare: [], price: [] };
+
+const CATS = {
+  suntik:     { label:'Suntik',     color:'#A78BFA', badge:'badge-suntik' },
+  infus:      { label:'Infus',      color:'#4ECDC4', badge:'badge-infus'  },
+  vaksin:     { label:'Vaksin',     color:'#F472B6', badge:'badge-vaksin' },
+  konsultasi: { label:'Konsultasi', color:'#C8F560', badge:'badge-konsultasi' },
+  other:      { label:'Other',      color:'#5A5852', badge:'badge-other'  }
+};
+
+const BULAN_ORDER = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// ── File handling ─────────────────────────────────────────────
+function handleFile(type, input) {
+  const file = input.files[0];
+  if (!file) return;
+  Papa.parse(file, {
+    header: true, skipEmptyLines: true,
+    complete: r => {
+      if (type === 'emr')   processEMR(r.data);
+      if (type === 'price') processPrice(r.data);
+      if (type === 'payer') processPayer(r.data);
+      loaded[type] = true;
+      document.getElementById('status-' + type).textContent = `✓ ${r.data.length} rows`;
+      document.getElementById('status-' + type).className = 'upload-card-status status-loaded';
+      document.getElementById('card-' + type).classList.add('loaded');
+      checkReady();
+    }
+  });
+}
+
+function processEMR(rows) {
+  rawEMR = rows.map(r => {
+    const dateRaw = r['Date'] || '';
+    const dateObj = dateRaw ? new Date(dateRaw) : null;
+    const bulan   = r['Bulan'] || (dateObj ? dateObj.toLocaleString('en',{month:'short'})+'-'+dateObj.getFullYear() : '');
+    const tahun   = r['Year']  || (dateObj ? dateObj.getFullYear().toString() : '');
+    const loc     = (r['location_name'] || '').trim();
+    const isHC    = loc.toLowerCase() === 'homecare';
+
+    // Kategori
+    const suntik  = r['Suntik']  === 'TRUE' || r['Suntik']  === true;
+    const infus   = r['Infus']   === 'TRUE' || r['Infus']   === true;
+    const vaksin  = r['Vaksin']  === 'TRUE' || r['Vaksin']  === true;
+    let kat = 'other';
+    if (suntik) kat = 'suntik';
+    else if (infus) kat = 'infus';
+    else if (vaksin) kat = 'vaksin';
+    else {
+      const klas = (r['Klasifikasi'] || '').toLowerCase();
+      if (klas.includes('konsultasi') || klas.includes('pengobatan')) kat = 'konsultasi';
+    }
+
+    const layanan     = (r['Layanan Grup'] || '').trim();
+    const paymentType = (r['payment_type'] || '').trim().toLowerCase();
+    const pendapatan  = parseFloat((r['Total Pendapatan']||'0').toString().replace(/[^0-9.-]/g,'')) || 0;
+
+    return {
+      date: dateRaw, bulan, tahun,
+      nama: (r['Name']||'').trim(),
+      lokasi: loc, isHomecare: isHC,
+      layanan, kat, paymentType,
+      pendapatan,
+      bulanSort: parseBulanSort(bulan)
+    };
+  }).filter(r => r.layanan);
+}
+
+function processPrice(rows) {
+  basePriceMap = {};
+  rows.forEach(r => {
+    const name = (r['Service Name (BH)'] || '').trim().toUpperCase();
+    const priceCols = Object.entries(r).filter(([k]) => k === 'Base Price');
+    // Use last Base Price column (numeric one)
+    let price = 0;
+    for (const [k,v] of Object.entries(r)) {
+      if (k === 'Base Price') price = parseFloat((v||'').toString().replace(/[^0-9.]/g,'')) || price;
+    }
+    if (name) basePriceMap[name] = price;
+  });
+}
+
+function processPayer(rows) {
+  payerPriceMap = {};
+  rows.forEach(r => {
+    const payerRaw = (r['Payer Price ID'] || '').trim();
+    const procRaw  = (r['Procedure ID']  || '').trim();
+    const excess   = parseFloat((r['Patient Excess']||'0').toString().replace(/[^0-9.]/g,'')) || 0;
+    // Strip [x] from payer and proc
+    const payer = payerRaw.replace(/\s*\[\d+\]\s*$/, '').trim().toLowerCase();
+    const proc  = procRaw.replace(/^\[\d+\]\s*/, '').trim().toUpperCase();
+    if (payer && proc) payerPriceMap[payer + '|' + proc] = excess;
+  });
+}
+
+function parseBulanSort(bulan) {
+  if (!bulan) return 0;
+  const [mon, yr] = bulan.split('-');
+  const mi = BULAN_ORDER.findIndex(m => m.toLowerCase() === (mon||'').toLowerCase().slice(0,3));
+  return (parseInt(yr)||0) * 100 + (mi >= 0 ? mi : 0);
+}
+
+function checkReady() {
+  if (loaded.emr && loaded.price && loaded.payer) {
+    document.getElementById('launchBtn').classList.add('ready');
+  }
+}
+
+function launchApp() {
+  if (!loaded.emr || !loaded.price || !loaded.payer) return;
+  document.getElementById('uploadScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  populateFilters();
+  render1HC();
+  renderHomecare();
+  renderPrice();
+}
+
+function resetApp() {
+  location.reload();
+}
+
+// ── Filters ───────────────────────────────────────────────────
+function populateFilters() {
+  const data1hc = rawEMR.filter(r => !r.isHomecare);
+  const dataHC  = rawEMR.filter(r => r.isHomecare);
+
+  // 1HC filters
+  fillSel('f1-lokasi', [...new Set(data1hc.map(r => r.lokasi).filter(Boolean))].sort());
+  fillSel('f1-payer',  [...new Set(data1hc.map(r => r.paymentType).filter(Boolean))].sort());
+  fillSel('f1-tahun',  [...new Set(data1hc.map(r => r.tahun).filter(Boolean))].sort().reverse());
+
+  // Homecare filters
+  fillSel('fh-payer',  [...new Set(dataHC.map(r => r.paymentType).filter(Boolean))].sort());
+  fillSel('fh-tahun',  [...new Set(dataHC.map(r => r.tahun).filter(Boolean))].sort().reverse());
+
+  // Price filters
+  fillSel('fp-lokasi', [...new Set(rawEMR.map(r => r.lokasi).filter(Boolean))].sort());
+  fillSel('fp-payer',  [...new Set(rawEMR.map(r => r.paymentType).filter(Boolean))].sort());
+  const bulanSorted = [...new Set(rawEMR.map(r => r.bulan).filter(Boolean))]
+    .sort((a,b) => parseBulanSort(a) - parseBulanSort(b));
+  fillSel('fp-bulan', bulanSorted);
+  fillSel('fp-kat',   Object.keys(CATS));
+}
+
+function fillSel(id, opts) {
+  const sel = document.getElementById(id);
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Semua</option>' + opts.map(o => `<option value="${o}">${o}</option>`).join('');
+  if (cur) sel.value = cur;
+}
+
+function resetFilters(tab) {
+  if (tab === '1hc') {
+    ['f1-lokasi','f1-payer','f1-tahun'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+    render1HC();
+  } else if (tab === 'homecare') {
+    ['fh-payer','fh-tahun'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+    renderHomecare();
+  } else {
+    ['fp-lokasi','fp-payer','fp-bulan','fp-kat'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+    renderPrice();
+  }
+}
+
+// ── Tab switcher ──────────────────────────────────────────────
+function showTab(tab, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + tab).classList.add('active');
+  el.classList.add('active');
+}
+
+// ── 1HC render ────────────────────────────────────────────────
+function render1HC() {
+  const lokasi = document.getElementById('f1-lokasi').value;
+  const payer  = document.getElementById('f1-payer').value;
+  const tahun  = document.getElementById('f1-tahun').value;
+
+  let data = rawEMR.filter(r => !r.isHomecare);
+  if (lokasi) data = data.filter(r => r.lokasi === lokasi);
+  if (payer)  data = data.filter(r => r.paymentType === payer);
+  if (tahun)  data = data.filter(r => r.tahun === tahun);
+
+  filteredData['1hc'] = data;
+  renderStats('1hc', data);
+  renderChart('1hc', data);
+  renderTable('1hc', data);
+}
+
+// ── Homecare render ───────────────────────────────────────────
+function renderHomecare() {
+  const payer = document.getElementById('fh-payer').value;
+  const tahun = document.getElementById('fh-tahun').value;
+
+  let data = rawEMR.filter(r => r.isHomecare);
+  if (payer) data = data.filter(r => r.paymentType === payer);
+  if (tahun) data = data.filter(r => r.tahun === tahun);
+
+  filteredData['homecare'] = data;
+  renderStats('homecare', data);
+  renderChart('homecare', data);
+  renderTable('homecare', data);
+}
+
+// ── Price Dashboard render ────────────────────────────────────
+function renderPrice() {
+  const lokasi = document.getElementById('fp-lokasi').value;
+  const payer  = document.getElementById('fp-payer').value;
+  const bulan  = document.getElementById('fp-bulan').value;
+  const kat    = document.getElementById('fp-kat').value;
+
+  let data = rawEMR;
+  if (lokasi) data = data.filter(r => r.lokasi === lokasi);
+  if (payer)  data = data.filter(r => r.paymentType === payer);
+  if (bulan)  data = data.filter(r => r.bulan === bulan);
+  if (kat)    data = data.filter(r => r.kat === kat);
+
+  filteredData['price'] = data;
+
+  // Stats
+  const totalKunjungan = data.length;
+  const withPrice = data.filter(r => getPayerPrice(r) !== null).length;
+  document.getElementById('stats-price').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Total Kunjungan</div><div class="stat-value accent">${fmt(totalKunjungan)}</div><div class="stat-sub">semua kategori</div></div>
+    <div class="stat-card"><div class="stat-label">Dengan Price Data</div><div class="stat-value">${fmt(withPrice)}</div><div class="stat-sub">ada payer price</div></div>
+    <div class="stat-card"><div class="stat-label">Tanpa Price Data</div><div class="stat-value">${fmt(totalKunjungan - withPrice)}</div><div class="stat-sub">perlu dicek</div></div>
+  `;
+
+  // Table
+  document.getElementById('count-price').textContent = data.length + ' rows';
+  if (!data.length) {
+    document.getElementById('table-price').innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div>Tidak ada data</div></div>';
+    return;
+  }
+
+  const rows = data.map(r => {
+    const price = getPayerPrice(r);
+    return `<tr>
+      <td class="muted mono" style="font-size:11px">${r.date ? r.date.split(',')[0] : r.bulan}</td>
+      <td>${r.nama || '—'}</td>
+      <td>${r.lokasi}</td>
+      <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r.layanan}">${r.layanan}</td>
+      <td><span class="badge badge-${r.kat}">${CATS[r.kat]?.label||r.kat}</span></td>
+      <td class="mono" style="text-align:right">${price !== null ? 'Rp '+fmtN(price) : '<span style="color:var(--muted)">—</span>'}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('table-price').innerHTML = `
+    <table>
+      <thead><tr><th>Tanggal</th><th>Nama</th><th>Lokasi</th><th>Prosedur</th><th>Kategori</th><th style="text-align:right">Price</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+function getPayerPrice(r) {
+  const key = r.paymentType + '|' + r.layanan.toUpperCase();
+  if (payerPriceMap[key] !== undefined) return payerPriceMap[key];
+  // fallback to base price
+  const base = basePriceMap[r.layanan.toUpperCase()];
+  return base !== undefined ? base : null;
+}
+
+// ── Shared: Stats ─────────────────────────────────────────────
+function renderStats(tab, data) {
+  const total    = data.length;
+  const suntik   = data.filter(r => r.kat === 'suntik').length;
+  const infus    = data.filter(r => r.kat === 'infus').length;
+  const vaksin   = data.filter(r => r.kat === 'vaksin').length;
+  const konsul   = data.filter(r => r.kat === 'konsultasi').length;
+
+  document.getElementById('stats-' + tab).innerHTML = `
+    <div class="stat-card"><div class="stat-label">Total Kunjungan</div><div class="stat-value accent">${fmt(total)}</div><div class="stat-sub">semua kategori</div></div>
+    <div class="stat-card"><div class="stat-label">Suntik</div><div class="stat-value" style="color:var(--violet)">${fmt(suntik)}</div><div class="stat-sub">${pct(suntik,total)}% dari total</div></div>
+    <div class="stat-card"><div class="stat-label">Infus</div><div class="stat-value" style="color:var(--teal)">${fmt(infus)}</div><div class="stat-sub">${pct(infus,total)}% dari total</div></div>
+    <div class="stat-card"><div class="stat-label">Vaksin</div><div class="stat-value" style="color:var(--pink)">${fmt(vaksin)}</div><div class="stat-sub">${pct(vaksin,total)}% dari total</div></div>
+    <div class="stat-card"><div class="stat-label">Konsultasi</div><div class="stat-value" style="color:var(--accent-dim)">${fmt(konsul)}</div><div class="stat-sub">${pct(konsul,total)}% dari total</div></div>
+  `;
+}
+
+// ── Shared: Chart ─────────────────────────────────────────────
+function renderChart(tab, data) {
+  // Group by bulan
+  const bulanMap = {};
+  data.forEach(r => {
+    if (!r.bulan) return;
+    if (!bulanMap[r.bulan]) bulanMap[r.bulan] = { bulanSort: r.bulanSort, suntik:0, infus:0, vaksin:0, konsultasi:0, other:0 };
+    bulanMap[r.bulan][r.kat] = (bulanMap[r.bulan][r.kat] || 0) + 1;
+  });
+
+  const sorted = Object.entries(bulanMap).sort((a,b) => a[1].bulanSort - b[1].bulanSort);
+  const labels = sorted.map(([b]) => b);
+  const catKeys = ['suntik','infus','vaksin','konsultasi','other'];
+
+  const datasets = catKeys.map(k => ({
+    label: CATS[k].label,
+    data: sorted.map(([,v]) => v[k] || 0),
+    backgroundColor: CATS[k].color + 'CC',
+    borderColor: CATS[k].color,
+    borderWidth: 1,
+    borderRadius: 3
+  }));
+
+  const canvasId = 'chart-' + tab;
+  if (charts[tab]) { charts[tab].destroy(); }
+
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  charts[tab] = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: '#212120', titleColor: '#F0EDE6', bodyColor: '#7A7872', borderColor: '#2E2E2C', borderWidth: 1 }
+      },
+      scales: {
+        x: { stacked: true, ticks: { color: '#7A7872', font: { size: 11, family: 'DM Mono' } }, grid: { color: '#2E2E2C' } },
+        y: { stacked: true, ticks: { color: '#7A7872', font: { size: 11 } }, grid: { color: '#2E2E2C' } }
+      }
+    }
+  });
+
+  // Legend
+  document.getElementById('legend-' + tab).innerHTML = catKeys.map(k =>
+    `<div class="legend-item"><div class="legend-dot" style="background:${CATS[k].color}"></div>${CATS[k].label}</div>`
+  ).join('');
+}
+
+// ── Shared: Table ─────────────────────────────────────────────
+function renderTable(tab, data) {
+  const countEl = document.getElementById('count-' + tab);
+  const tableEl = document.getElementById('table-' + tab);
+  if (!countEl || !tableEl) return;
+
+  countEl.textContent = data.length + ' rows';
+  if (!data.length) {
+    tableEl.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div>Tidak ada data</div></div>';
+    return;
+  }
+
+  const rows = data.map(r => {
+    const price = getPayerPrice(r);
+    return `<tr>
+      <td class="muted mono" style="font-size:11px">${r.date ? r.date.split(',')[0] : r.bulan}</td>
+      <td>${r.nama || '—'}</td>
+      <td>${r.lokasi}</td>
+      <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r.layanan}">${r.layanan}</td>
+      <td><span class="badge badge-${r.kat}">${CATS[r.kat]?.label||r.kat}</span></td>
+      <td class="muted" style="font-size:12px">${r.paymentType||'—'}</td>
+      <td class="mono" style="text-align:right">${price !== null ? 'Rp '+fmtN(price) : '<span style="color:var(--muted2)">—</span>'}</td>
+    </tr>`;
+  }).join('');
+
+  tableEl.innerHTML = `
+    <table>
+      <thead><tr><th>Tanggal</th><th>Nama</th><th>Lokasi</th><th>Prosedur</th><th>Kategori</th><th>Payment Type</th><th style="text-align:right">Price</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+// ── Export CSV ────────────────────────────────────────────────
+function exportCSV(tab) {
+  const data = filteredData[tab] || [];
+  if (!data.length) return;
+  const header = 'Tanggal,Nama,Lokasi,Prosedur,Kategori,Payment Type,Price';
+  const rows = data.map(r => {
+    const price = getPayerPrice(r);
+    return [
+      r.date ? r.date.split(',')[0] : r.bulan,
+      r.nama, r.lokasi,
+      `"${r.layanan}"`,
+      CATS[r.kat]?.label || r.kat,
+      r.paymentType,
+      price !== null ? price : ''
+    ].join(',');
+  });
+  const blob = new Blob([header+'\n'+rows.join('\n')], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `oneklinik_${tab}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function fmt(n)    { return (n||0).toLocaleString('id-ID'); }
+function fmtN(n)   { return Math.round(n||0).toLocaleString('id-ID'); }
+function pct(a,b)  { return b ? Math.round(a/b*100) : 0; }
+</script>
+</body>
+</html>
