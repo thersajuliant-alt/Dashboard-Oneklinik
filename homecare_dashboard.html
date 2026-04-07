@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>OneKlinik · Homecare Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0D1B2A;--navy2:#142233;--navy3:#1C3050;
+  --border:#2A4060;--border2:#345070;
+  --text:#E8EFF8;--text2:#8BA5C0;--text3:#5A7A9A;
+  --green:#00C48C;--green-d:#00A878;--green-bg:rgba(0,196,140,0.1);
+  --blue:#4A9EFF;--blue-bg:rgba(74,158,255,0.1);
+  --amber:#FFB84A;--amber-bg:rgba(255,184,74,0.1);
+  --red:#FF6B6B;--red-bg:rgba(255,107,107,0.1);
+  --purple:#A78BFA;--purple-bg:rgba(167,139,250,0.1);
+  --r:10px;
+}
+html,body{font-family:'Inter',sans-serif;background:var(--navy);color:var(--text);min-height:100vh;font-size:14px;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--navy2)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* ── TOPBAR ── */
+.topbar{background:var(--navy2);border-bottom:1px solid var(--border);height:52px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.t-logo{display:flex;align-items:center;gap:8px}
+.t-mark{width:26px;height:26px;background:linear-gradient(135deg,var(--green),var(--blue));border-radius:7px;display:flex;align-items:center;justify-content:center}
+.t-mark svg{width:13px;height:13px;stroke:white;fill:none;stroke-width:2.5;stroke-linecap:round}
+.t-name{font-size:14px;font-weight:700}
+.t-name span{color:var(--green)}
+.t-badge{font-size:11px;color:var(--text3);background:var(--navy3);border:1px solid var(--border);padding:3px 10px;border-radius:99px;margin-left:8px}
+.t-back{font-size:12px;color:var(--text2);background:none;border:1px solid var(--border);border-radius:7px;padding:5px 12px;cursor:pointer;font-family:inherit;transition:all 0.15s;text-decoration:none;display:flex;align-items:center;gap:5px}
+.t-back:hover{border-color:var(--border2);color:var(--text)}
+
+/* ── MAIN ── */
+.main{padding:24px;max-width:1400px}
+
+/* ── STAT CARDS ── */
+.srow{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:20px}
+.sc{background:var(--navy2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;position:relative;overflow:hidden}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.sc-green::before{background:var(--green)}
+.sc-blue::before{background:var(--blue)}
+.sc-amber::before{background:var(--amber)}
+.sc-red::before{background:var(--red)}
+.sc-purple::before{background:var(--purple)}
+.sc-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--text3);margin-bottom:8px}
+.sc-val{font-size:22px;font-weight:700;letter-spacing:-0.5px;font-family:'JetBrains Mono',monospace}
+.sc-sub{font-size:11px;color:var(--text3);margin-top:4px}
+
+/* ── PROFIT ROW ── */
+.profit-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+.pc{background:var(--navy2);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px}
+.pc.pos{border-color:rgba(0,196,140,0.35);background:var(--green-bg)}
+.pc.neg{border-color:rgba(255,107,107,0.35);background:var(--red-bg)}
+.pc.info{border-color:rgba(74,158,255,0.35);background:var(--blue-bg)}
+.pc.warn{border-color:rgba(255,184,74,0.35);background:var(--amber-bg)}
+.pc-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--text3);margin-bottom:8px}
+.pc-val{font-size:26px;font-weight:700;letter-spacing:-0.5px;font-family:'JetBrains Mono',monospace}
+.pc.pos .pc-val{color:var(--green)}
+.pc.neg .pc-val{color:var(--red)}
+.pc.info .pc-val{color:var(--blue)}
+.pc.warn .pc-val{color:var(--amber)}
+.pc-sub{font-size:11px;color:var(--text3);margin-top:5px}
+
+/* ── SECTION ── */
+.sec{background:var(--navy2);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:20px}
+.sec-title{font-size:14px;font-weight:600;margin-bottom:4px}
+.sec-sub{font-size:12px;color:var(--text3);margin-bottom:16px}
+
+/* ── FILTER BAR ── */
+.fbar{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:20px}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--text3)}
+.fg select,.fg input{background:var(--navy2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;font-family:inherit;font-size:12px;color:var(--text);outline:none;min-width:140px;transition:border-color 0.15s}
+.fg select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%235A7A9A' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+.fg select:focus,.fg input:focus{border-color:var(--green);outline:none}
+.freset{background:none;border:1px solid var(--border);border-radius:7px;padding:7px 14px;font-family:inherit;font-size:12px;color:var(--text2);cursor:pointer;align-self:flex-end;transition:all 0.15s}
+.freset:hover{color:var(--text);border-color:var(--border2)}
+
+/* ── INPUT TRANSAKSI ── */
+.trx-form{display:grid;grid-template-columns:1fr 1fr 1fr auto auto;gap:10px;align-items:flex-end;margin-bottom:16px}
+.trx-field{display:flex;flex-direction:column;gap:4px}
+.trx-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:var(--text3)}
+.trx-select,.trx-input{background:var(--navy);border:1px solid var(--border);border-radius:7px;padding:9px 12px;font-family:inherit;font-size:13px;color:var(--text);outline:none;width:100%;transition:border-color 0.15s}
+.trx-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%235A7A9A' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+.trx-select:focus,.trx-input:focus{border-color:var(--green);outline:none}
+
+/* Nakes toggle */
+.nakes-toggle{display:flex;gap:4px;background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:3px}
+.ntog{background:none;border:none;border-radius:6px;padding:6px 14px;font-family:inherit;font-size:12px;font-weight:500;color:var(--text3);cursor:pointer;transition:all 0.15s;white-space:nowrap}
+.ntog.on{background:var(--navy3);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,0.3)}
+
+/* Preview box */
+.trx-preview{background:var(--navy);border:1px solid var(--border);border-radius:7px;padding:10px 14px;margin-bottom:14px;display:none;font-size:12px}
+.trx-preview.show{display:flex;gap:20px;flex-wrap:wrap}
+.tp-item{display:flex;flex-direction:column;gap:2px}
+.tp-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px}
+.tp-val{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600}
+.tp-val.green{color:var(--green)}
+.tp-val.red{color:var(--red)}
+.tp-val.amber{color:var(--amber)}
+
+.add-btn{background:var(--green);color:var(--navy);border:none;border-radius:7px;padding:9px 20px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.15s;white-space:nowrap;align-self:flex-end}
+.add-btn:hover{background:var(--green-d)}
+
+/* ── EXPENSE INPUT ── */
+.exp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:14px}
+.exp-field{display:flex;flex-direction:column;gap:4px}
+.exp-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:var(--text3)}
+.exp-wrap{display:flex;align-items:center;background:var(--navy);border:1px solid var(--border);border-radius:7px;overflow:hidden;transition:border-color 0.15s}
+.exp-wrap:focus-within{border-color:var(--green)}
+.exp-prefix{padding:0 10px;font-size:12px;color:var(--text3);font-family:'JetBrains Mono',monospace}
+.exp-input{background:none;border:none;padding:9px 10px 9px 0;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text);outline:none;width:100%}
+.exp-period{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px}
+.exp-save{background:var(--green);color:var(--navy);border:none;border-radius:7px;padding:8px 18px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;align-self:flex-end;transition:all 0.15s}
+.exp-save:hover{background:var(--green-d)}
+
+/* ── TABLE ── */
+.tw{background:var(--navy2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.tw-top{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.tw-title{font-size:13px;font-weight:600}
+.tw-right{display:flex;gap:8px;align-items:center}
+.tw-count{font-size:11px;color:var(--text3)}
+.tw-scroll{overflow-x:auto;max-height:400px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;min-width:500px}
+thead th{padding:9px 14px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text3);background:var(--navy);border-bottom:1px solid var(--border);position:sticky;top:0;white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--border);transition:background 0.1s}
+tbody tr:hover{background:var(--navy3)}
+tbody tr:last-child{border-bottom:none}
+td{padding:9px 14px;font-size:13px}
+td.mono{font-family:'JetBrains Mono',monospace;font-size:11px}
+td.right{text-align:right}
+td.dim{color:var(--text2)}
+td.red{color:var(--red)}
+td.green{color:var(--green)}
+td.amber{color:var(--amber)}
+.del-btn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px;font-family:inherit;padding:2px 6px;border-radius:4px;transition:all 0.15s}
+.del-btn:hover{color:var(--red);background:var(--red-bg)}
+.edit-btn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px;font-family:inherit;padding:2px 6px;border-radius:4px;transition:all 0.15s}
+.edit-btn:hover{color:var(--blue);background:var(--blue-bg)}
+.bdg{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.bdg-int{background:var(--blue-bg);color:var(--blue)}
+.bdg-free{background:var(--purple-bg);color:var(--purple)}
+.empty-row{padding:40px;text-align:center;color:var(--text3);font-size:13px}
+
+/* ── CHART ── */
+.cc{background:var(--navy2);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:20px}
+.cc-title{font-size:14px;font-weight:600;margin-bottom:16px}
+.chart-h{height:240px;position:relative}
+
+/* DIVIDER */
+.divider{border:none;border-top:1px solid var(--border);margin:20px 0}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="t-logo">
+    <div class="t-mark"><svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></svg></div>
+    <div class="t-name">One<span>Klinik</span></div>
+    <span class="t-badge">Homecare Dashboard</span>
+  </div>
+  <a class="t-back" href="oneklinik_dashboard.html">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Kembali
+  </a>
+</div>
+
+<div class="main">
+
+  <!-- FILTER -->
+  <div class="fbar">
+    <div class="fg"><span class="fl">Bulan</span>
+      <select id="f-bln" onchange="renderAll()"><option value="">Semua Bulan</option></select>
+    </div>
+    <div class="fg"><span class="fl">Tahun</span>
+      <select id="f-thn" onchange="renderAll()"><option value="">Semua Tahun</option></select>
+    </div>
+    <button class="freset" onclick="resetFilter()">↺ Reset</button>
+  </div>
+
+  <!-- PROFIT SUMMARY -->
+  <div class="profit-row" id="profit-row"></div>
+
+  <!-- STAT CARDS -->
+  <div class="srow" id="stat-cards"></div>
+
+  <!-- CHART -->
+  <div class="cc">
+    <div class="cc-title">Pendapatan & Profit per Bulan</div>
+    <div class="chart-h"><canvas id="main-chart"></canvas></div>
+  </div>
+
+  <!-- INPUT TRANSAKSI -->
+  <div class="sec">
+    <div class="sec-title">Input Transaksi</div>
+    <div class="sec-sub">Pilih menu dan tipe Nakes — BHP & insentif otomatis terhitung</div>
+
+    <div class="trx-form">
+      <div class="trx-field">
+        <span class="trx-label">Tanggal</span>
+        <input class="trx-input" type="date" id="trx-date"/>
+      </div>
+      <div class="trx-field">
+        <span class="trx-label">Nama Pasien</span>
+        <input class="trx-input" type="text" id="trx-nama" placeholder="Nama pasien"/>
+      </div>
+      <div class="trx-field">
+        <span class="trx-label">Menu</span>
+        <select class="trx-select" id="trx-menu" onchange="previewTrx()">
+          <option value="">Pilih menu...</option>
+        </select>
+      </div>
+      <div class="trx-field">
+        <span class="trx-label">Tipe Nakes</span>
+        <div class="nakes-toggle">
+          <button class="ntog on" id="ntog-int" onclick="setNakes('internal',this)">Internal</button>
+          <button class="ntog" id="ntog-free" onclick="setNakes('freelancer',this)">Freelancer</button>
+        </div>
+      </div>
+      <button class="add-btn" onclick="addTrx()">+ Tambah</button>
+    </div>
+
+    <!-- Preview -->
+    <div class="trx-preview" id="trx-preview">
+      <div class="tp-item"><span class="tp-label">Harga Jual</span><span class="tp-val green" id="prev-harga">—</span></div>
+      <div class="tp-item"><span class="tp-label">BHP</span><span class="tp-val red" id="prev-bhp">—</span></div>
+      <div class="tp-item"><span class="tp-label">Nakes Fee</span><span class="tp-val amber" id="prev-nakes">—</span></div>
+      <div class="tp-item"><span class="tp-label">Estimasi Margin</span><span class="tp-val green" id="prev-margin">—</span></div>
+    </div>
+  </div>
+
+  <!-- RIWAYAT TRANSAKSI -->
+  <div class="tw" style="margin-bottom:20px">
+    <div class="tw-top">
+      <span class="tw-title">Riwayat Transaksi</span>
+      <div class="tw-right">
+        <span class="tw-count" id="trx-count"></span>
+        <button class="del-btn" onclick="exportTrx()" style="color:var(--text2);padding:4px 10px;border:1px solid var(--border);border-radius:6px">Export</button>
+      </div>
+    </div>
+    <div class="tw-scroll" id="trx-table"></div>
+  </div>
+
+  <hr class="divider"/>
+
+  <!-- EXPENSE INPUT -->
+  <div class="sec">
+    <div class="sec-title">Expense Bulanan</div>
+    <div class="sec-sub">Input expense tambahan per bulan. Tersimpan otomatis.</div>
+    <div class="exp-period">
+      <div class="fg"><span class="fl">Bulan</span>
+        <select id="e-bln">
+          <option>Jan</option><option>Feb</option><option>Mar</option><option>Apr</option>
+          <option>May</option><option>Jun</option><option>Jul</option><option>Aug</option>
+          <option>Sep</option><option>Oct</option><option>Nov</option><option>Dec</option>
+        </select>
+      </div>
+      <div class="fg"><span class="fl">Tahun</span>
+        <select id="e-thn">
+          <option>2024</option><option>2025</option><option>2026</option>
+        </select>
+      </div>
+      <button class="exp-save" onclick="saveExpense()">Simpan</button>
+    </div>
+    <div class="exp-grid">
+      <div class="exp-field">
+        <span class="exp-label">Marketing</span>
+        <div class="exp-wrap"><span class="exp-prefix">Rp</span><input class="exp-input" id="e-marketing" type="number" placeholder="0"/></div>
+      </div>
+      <div class="exp-field">
+        <span class="exp-label">Equipment</span>
+        <div class="exp-wrap"><span class="exp-prefix">Rp</span><input class="exp-input" id="e-equipment" type="number" placeholder="0"/></div>
+      </div>
+    </div>
+
+    <!-- Expense history -->
+    <div class="tw">
+      <div class="tw-top"><span class="tw-title">Riwayat Expense</span></div>
+      <div class="tw-scroll" id="exp-table"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════
+var MENU = [
+  {name:'Immune drip',      harga:380000, bhp:45334,   nakesInt:38000,  nakesFree:114000},
+  {name:'Neuroboost drip',  harga:380000, bhp:31299,   nakesInt:38000,  nakesFree:114000},
+  {name:'Total Vitality drip',harga:490000,bhp:53432,  nakesInt:49000,  nakesFree:147000},
+  {name:'Immune Max+',      harga:780000, bhp:356201,  nakesInt:78000,  nakesFree:234000},
+  {name:'Mood Booster',     harga:420000, bhp:103201,  nakesInt:42000,  nakesFree:126000},
+  {name:'Jet Lag',          harga:390000, bhp:34179,   nakesInt:39000,  nakesFree:117000},
+  {name:'Anti Hangover',    harga:480000, bhp:46870,   nakesInt:48000,  nakesFree:144000},
+  {name:'Stomach Soother',  harga:580000, bhp:20481,   nakesInt:58000,  nakesFree:174000},
+  {name:'Anti-flu',         harga:820000, bhp:252564,  nakesInt:82000,  nakesFree:246000},
+  {name:'Fever Go Away',    harga:690000, bhp:45681,   nakesInt:69000,  nakesFree:207000},
+  {name:'Pain Killer',      harga:480000, bhp:34042,   nakesInt:48000,  nakesFree:144000},
+  {name:'HPV Gardasil 4',   harga:4800000,bhp:3472427, nakesInt:225000, nakesFree:225000},
+  {name:'HPV Gardasil 9',   harga:8100000,bhp:6026099, nakesInt:225000, nakesFree:225000},
+  {name:'Pneumonia',        harga:1320000,bhp:951063,  nakesInt:75000,  nakesFree:75000},
+  {name:'Influenza-Flubio', harga:390000, bhp:124941,  nakesInt:75000,  nakesFree:75000},
+  {name:'Influenza-Vaxigrip',harga:480000,bhp:245483,  nakesInt:75000,  nakesFree:75000},
+  {name:'Hepatitis B',      harga:1185000,bhp:597437,  nakesInt:225000, nakesFree:225000},
+  {name:'Dengue',           harga:1520000,bhp:491366,  nakesInt:150000, nakesFree:150000}
+];
+
+var nakesType = 'internal';
+var transactions = [];
+var expenses = {};
+var chart = null;
+
+// ════════════════════════════════════════
+// LOCALSTORAGE
+// ════════════════════════════════════════
+var LS = {TRX:'ok_hc_trx', EXP:'ok_hc_exp'};
+
+function initLS(){
+  try{
+    var t = localStorage.getItem(LS.TRX);
+    var e = localStorage.getItem(LS.EXP);
+    if(t) transactions = JSON.parse(t);
+    if(e) expenses = JSON.parse(e);
+  }catch(ex){}
+  fillMenuSelect();
+  fillFilters();
+  setDefaultDate();
+  renderAll();
+}
+
+function saveTrxLS(){ try{ localStorage.setItem(LS.TRX, JSON.stringify(transactions)); }catch(ex){} }
+function saveExpLS(){ try{ localStorage.setItem(LS.EXP, JSON.stringify(expenses)); }catch(ex){} }
+
+// ════════════════════════════════════════
+// SETUP
+// ════════════════════════════════════════
+function setDefaultDate(){
+  var d = new Date();
+  var ds = d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+  document.getElementById('trx-date').value = ds;
+}
+
+function pad(n){ return n<10?'0'+n:n; }
+
+function fillMenuSelect(){
+  var sel = document.getElementById('trx-menu');
+  sel.innerHTML = '<option value="">Pilih menu...</option>';
+  MENU.forEach(function(m,i){
+    sel.innerHTML += '<option value="'+i+'">'+m.name+' — Rp '+N(m.harga)+'</option>';
+  });
+}
+
+function fillFilters(){
+  var blns = {}, thns = {};
+  transactions.forEach(function(t){
+    if(t.bulan) blns[t.bulan] = 1;
+    if(t.tahun) thns[t.tahun] = 1;
+  });
+  var fBln = document.getElementById('f-bln');
+  var curBln = fBln.value;
+  fBln.innerHTML = '<option value="">Semua Bulan</option>';
+  var BORD=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  Object.keys(blns).sort(function(a,b){
+    var ai=BORD.indexOf(a), bi=BORD.indexOf(b); return ai-bi;
+  }).forEach(function(b){ fBln.innerHTML += '<option value="'+b+'">'+b+'</option>'; });
+  if(curBln) fBln.value = curBln;
+
+  var fThn = document.getElementById('f-thn');
+  var curThn = fThn.value;
+  fThn.innerHTML = '<option value="">Semua Tahun</option>';
+  Object.keys(thns).sort().reverse().forEach(function(t){ fThn.innerHTML += '<option value="'+t+'">'+t+'</option>'; });
+  if(curThn) fThn.value = curThn;
+}
+
+function resetFilter(){
+  document.getElementById('f-bln').value = '';
+  document.getElementById('f-thn').value = '';
+  renderAll();
+}
+
+function gv(id){ var e=document.getElementById(id); return e?e.value:''; }
+
+// ════════════════════════════════════════
+// NAKES TOGGLE
+// ════════════════════════════════════════
+function setNakes(type, btn){
+  nakesType = type;
+  document.querySelectorAll('.ntog').forEach(function(b){ b.classList.remove('on'); });
+  btn.classList.add('on');
+  previewTrx();
+}
+
+// ════════════════════════════════════════
+// PREVIEW
+// ════════════════════════════════════════
+function previewTrx(){
+  var idx = gv('trx-menu');
+  var prev = document.getElementById('trx-preview');
+  if(idx === ''){ prev.classList.remove('show'); return; }
+  var m = MENU[parseInt(idx)];
+  var nakes = nakesType === 'internal' ? m.nakesInt : m.nakesFree;
+  var margin = m.harga - m.bhp - nakes;
+  document.getElementById('prev-harga').textContent = 'Rp '+N(m.harga);
+  document.getElementById('prev-bhp').textContent = '-Rp '+N(m.bhp);
+  document.getElementById('prev-nakes').textContent = '-Rp '+N(nakes);
+  document.getElementById('prev-margin').textContent = 'Rp '+N(margin);
+  prev.classList.add('show');
+}
+
+// ════════════════════════════════════════
+// ADD TRANSACTION
+// ════════════════════════════════════════
+function addTrx(){
+  var date = gv('trx-date');
+  var nama = gv('trx-nama').trim();
+  var idx  = gv('trx-menu');
+  if(!date || !idx){ alert('Tanggal dan menu wajib diisi.'); return; }
+
+  var m = MENU[parseInt(idx)];
+  var nakes = nakesType === 'internal' ? m.nakesInt : m.nakesFree;
+  var d = new Date(date);
+  var BORD=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var bulan = BORD[d.getMonth()];
+  var tahun = d.getFullYear().toString();
+
+  transactions.push({
+    id: Date.now(),
+    date: date, bulan: bulan, tahun: tahun,
+    nama: nama || '—',
+    menu: m.name,
+    harga: m.harga,
+    bhp: m.bhp,
+    nakes: nakes,
+    nakesType: nakesType,
+    margin: m.harga - m.bhp - nakes
+  });
+
+  saveTrxLS();
+  document.getElementById('trx-nama').value = '';
+  document.getElementById('trx-menu').value = '';
+  document.getElementById('trx-preview').classList.remove('show');
+  fillFilters();
+  renderAll();
+}
+
+// ════════════════════════════════════════
+// DELETE TRANSACTION
+// ════════════════════════════════════════
+function delTrx(id){
+  transactions = transactions.filter(function(t){ return t.id !== id; });
+  saveTrxLS(); fillFilters(); renderAll();
+}
+
+// ════════════════════════════════════════
+// EXPENSE
+// ════════════════════════════════════════
+function saveExpense(){
+  var bln = gv('e-bln'), thn = gv('e-thn');
+  var key = bln+'-'+thn;
+  expenses[key] = {
+    marketing: parseFloat(document.getElementById('e-marketing').value)||0,
+    equipment: parseFloat(document.getElementById('e-equipment').value)||0
+  };
+  saveExpLS();
+  ['e-marketing','e-equipment'].forEach(function(id){ document.getElementById(id).value=''; });
+  renderAll();
+}
+
+function delExp(key){
+  delete expenses[key]; saveExpLS(); renderAll();
+}
+
+function getTotalExp(bln, thn){
+  var total = 0;
+  Object.keys(expenses).forEach(function(k){
+    if(bln && k !== bln+'-'+thn) return;
+    if(!bln && thn && !k.endsWith('-'+thn)) return;
+    var ex = expenses[k];
+    total += (ex.marketing||0) + (ex.equipment||0);
+  });
+  return total;
+}
+
+// ════════════════════════════════════════
+// FILTER DATA
+// ════════════════════════════════════════
+function filtered(){
+  var bln = gv('f-bln'), thn = gv('f-thn');
+  return transactions.filter(function(t){
+    return (!bln || t.bulan === bln) && (!thn || t.tahun === thn);
+  });
+}
+
+// ════════════════════════════════════════
+// RENDER ALL
+// ════════════════════════════════════════
+function renderAll(){
+  var data = filtered();
+  var bln = gv('f-bln'), thn = gv('f-thn');
+
+  var totalHarga  = data.reduce(function(s,t){ return s+t.harga; }, 0);
+  var totalBHP    = data.reduce(function(s,t){ return s+t.bhp; }, 0);
+  var totalNakes  = data.reduce(function(s,t){ return s+t.nakes; }, 0);
+  var totalExp    = getTotalExp(bln, thn);
+  var totalMargin = data.reduce(function(s,t){ return s+t.margin; }, 0);
+  var netProfit   = totalMargin - totalExp;
+  var marginPct   = totalHarga > 0 ? Math.round(netProfit/totalHarga*100) : 0;
+
+  // Profit row
+  document.getElementById('profit-row').innerHTML =
+    pc('info','Total Pendapatan','Rp '+N(totalHarga),(bln||'Semua')+(thn?' '+thn:''))+
+    pc('warn','Total BHP + Nakes','-Rp '+N(totalBHP+totalNakes),'Cost of service')+
+    pc('warn','Expense Lain','-Rp '+N(totalExp),'Marketing + Equipment')+
+    pc(netProfit>=0?'pos':'neg','Net Profit','Rp '+N(netProfit),'Margin '+marginPct+'%');
+
+  // Stat cards
+  document.getElementById('stat-cards').innerHTML =
+    sc('Total Kunjungan', N(data.length), 'green', 'transaksi')+
+    sc('Pendapatan', 'Rp '+N(totalHarga), 'blue', 'harga jual')+
+    sc('Total BHP', 'Rp '+N(totalBHP), 'red', 'biaya habis pakai')+
+    sc('Nakes Fee', 'Rp '+N(totalNakes), 'amber', 'internal+freelancer')+
+    sc('Gross Margin', 'Rp '+N(totalMargin), netProfit>=0?'green':'red', Math.round(totalHarga>0?totalMargin/totalHarga*100:0)+'% dari pendapatan');
+
+  renderChart(data);
+  renderTrxTable(data);
+  renderExpTable();
+}
+
+function pc(type, label, val, sub){
+  return '<div class="pc '+type+'">'+
+    '<div class="pc-label">'+label+'</div>'+
+    '<div class="pc-val">'+val+'</div>'+
+    '<div class="pc-sub">'+sub+'</div></div>';
+}
+
+function sc(label, val, color, sub){
+  return '<div class="sc sc-'+color+'">'+
+    '<div class="sc-label">'+label+'</div>'+
+    '<div class="sc-val">'+val+'</div>'+
+    '<div class="sc-sub">'+sub+'</div></div>';
+}
+
+// ════════════════════════════════════════
+// CHART
+// ════════════════════════════════════════
+function renderChart(data){
+  var bmap = {};
+  var BORD=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  data.forEach(function(t){
+    var k = t.bulan+'-'+t.tahun;
+    if(!bmap[k]) bmap[k] = {bs:(parseInt(t.tahun)||0)*100+BORD.indexOf(t.bulan), harga:0, margin:0};
+    bmap[k].harga  += t.harga;
+    bmap[k].margin += t.margin;
+  });
+  // Add expenses
+  Object.keys(expenses).forEach(function(k){
+    if(bmap[k]){
+      var ex = expenses[k];
+      bmap[k].margin -= (ex.marketing||0)+(ex.equipment||0);
+    }
+  });
+
+  var sorted = Object.keys(bmap).sort(function(a,b){ return bmap[a].bs-bmap[b].bs; });
+
+  if(chart) chart.destroy();
+  var ctx = document.getElementById('main-chart').getContext('2d');
+  chart = new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels: sorted,
+      datasets:[
+        {label:'Pendapatan', data:sorted.map(function(k){return bmap[k].harga;}),
+         backgroundColor:'rgba(74,158,255,0.5)',borderColor:'#4A9EFF',borderWidth:1.5,borderRadius:3},
+        {label:'Net Profit', data:sorted.map(function(k){return bmap[k].margin;}),
+         backgroundColor:'rgba(0,196,140,0.5)',borderColor:'#00C48C',borderWidth:1.5,borderRadius:3}
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{labels:{color:'#8BA5C0',font:{size:12}}},
+        tooltip:{backgroundColor:'#142233',titleColor:'#E8EFF8',bodyColor:'#8BA5C0',
+          borderColor:'#2A4060',borderWidth:1,padding:12,cornerRadius:8,
+          callbacks:{label:function(ctx){ return ' '+ctx.dataset.label+': Rp '+N(ctx.parsed.y); }}}
+      },
+      scales:{
+        x:{ticks:{color:'#5A7A9A',font:{size:11,family:'JetBrains Mono'}},grid:{color:'rgba(42,64,96,0.5)'},border:{color:'#2A4060'}},
+        y:{ticks:{color:'#5A7A9A',font:{size:11},callback:function(v){return 'Rp '+N(v);}},grid:{color:'rgba(42,64,96,0.5)'},border:{color:'#2A4060'}}
+      }
+    }
+  });
+}
+
+// ════════════════════════════════════════
+// TRANSACTION TABLE
+// ════════════════════════════════════════
+function renderTrxTable(data){
+  document.getElementById('trx-count').textContent = N(data.length)+' transaksi';
+  if(!data.length){
+    document.getElementById('trx-table').innerHTML = '<div class="empty-row">Belum ada transaksi. Tambah via form di atas.</div>';
+    return;
+  }
+  var sorted = data.slice().sort(function(a,b){ return b.date.localeCompare(a.date); });
+  var rows = sorted.map(function(t){
+    return '<tr>'+
+      '<td class="mono">'+t.date+'</td>'+
+      '<td>'+esc(t.nama)+'</td>'+
+      '<td>'+esc(t.menu)+'</td>'+
+      '<td><span class="bdg '+(t.nakesType==='internal'?'bdg-int':'bdg-free')+'">'+
+        (t.nakesType==='internal'?'Internal':'Freelancer')+'</span></td>'+
+      '<td class="mono right green">'+N(t.harga)+'</td>'+
+      '<td class="mono right red">'+N(t.bhp)+'</td>'+
+      '<td class="mono right amber">'+N(t.nakes)+'</td>'+
+      '<td class="mono right '+(t.margin>=0?'green':'red')+'">'+N(t.margin)+'</td>'+
+      '<td><button class="del-btn" onclick="delTrx('+t.id+')">hapus</button></td>'+
+    '</tr>';
+  }).join('');
+  document.getElementById('trx-table').innerHTML =
+    '<table><thead><tr>'+
+    '<th>Tanggal</th><th>Pasien</th><th>Menu</th><th>Nakes</th>'+
+    '<th style="text-align:right">Harga</th>'+
+    '<th style="text-align:right">BHP</th>'+
+    '<th style="text-align:right">Nakes Fee</th>'+
+    '<th style="text-align:right">Margin</th>'+
+    '<th></th>'+
+    '</tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+// ════════════════════════════════════════
+// EXPENSE TABLE
+// ════════════════════════════════════════
+function renderExpTable(){
+  var keys = Object.keys(expenses).sort();
+  if(!keys.length){
+    document.getElementById('exp-table').innerHTML = '<div class="empty-row">Belum ada expense.</div>';
+    return;
+  }
+  var rows = keys.map(function(k){
+    var ex = expenses[k];
+    var total = (ex.marketing||0)+(ex.equipment||0);
+    return '<tr>'+
+      '<td class="mono">'+k+'</td>'+
+      '<td class="mono right">'+N(ex.marketing||0)+'</td>'+
+      '<td class="mono right">'+N(ex.equipment||0)+'</td>'+
+      '<td class="mono right amber">'+N(total)+'</td>'+
+      '<td><button class="del-btn" onclick="delExp(\''+k+'\')">hapus</button></td>'+
+    '</tr>';
+  }).join('');
+  document.getElementById('exp-table').innerHTML =
+    '<table><thead><tr>'+
+    '<th>Periode</th><th style="text-align:right">Marketing</th>'+
+    '<th style="text-align:right">Equipment</th><th style="text-align:right">Total</th><th></th>'+
+    '</tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+// ════════════════════════════════════════
+// EXPORT
+// ════════════════════════════════════════
+function exportTrx(){
+  var data = filtered(); if(!data.length) return;
+  var lines = ['Tanggal,Pasien,Menu,Nakes,Harga Jual,BHP,Nakes Fee,Margin'];
+  data.forEach(function(t){
+    lines.push([t.date,t.nama,'"'+t.menu+'"',t.nakesType,t.harga,t.bhp,t.nakes,t.margin].join(','));
+  });
+  var blob = new Blob([lines.join('\n')],{type:'text/csv'});
+  var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'homecare_transaksi_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
+}
+
+// ════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════
+function N(n){ return Math.round(n||0).toLocaleString('id-ID'); }
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+window.onload = function(){ initLS(); };
+</script>
+</body>
+</html>
