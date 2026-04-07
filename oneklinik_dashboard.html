@@ -404,19 +404,18 @@ td.right{text-align:right}
       <div class="fbar">
         <div class="fg"><span class="fl">Payment Type</span><select id="fhpay" onchange="dhc()"><option value="">Semua</option></select></div>
         <div class="fg"><span class="fl">Tahun</span><select id="fhthn" onchange="dhc()"><option value="">Semua Tahun</option></select></div>
-        <div class="fg"><span class="fl">Bulan Expense</span><select id="fhbln" onchange="renderExpenseHistory()"><option value="">Semua</option></select></div>
         <button class="freset" onclick="rf('hc')">↺ Reset</button>
+        <a href="homecare_dashboard.html" style="margin-left:auto;display:flex;align-items:center;gap:6px;background:var(--green);color:var(--navy);border:none;border-radius:7px;padding:7px 16px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;transition:all 0.15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+          Homecare Dashboard →
+        </a>
       </div>
-
-      <!-- Profit summary -->
-      <div class="profit-row" id="profit-row"></div>
 
       <div class="srow" id="sthc"></div>
       <div class="cc">
         <div class="cc-top">
           <div class="cc-left">
             <div class="cc-title" id="cthc">Tren Kunjungan Homecare per Bulan</div>
-            <div class="cc-sub">Klik kategori untuk filter</div>
+            <div class="cc-sub">Klik kategori untuk filter · Detail profit di Homecare Dashboard</div>
           </div>
           <div class="cc-right">
             <div class="tog-wrap">
@@ -428,49 +427,6 @@ td.right{text-align:right}
           </div>
         </div>
         <div class="chart-h"><canvas id="chhc"></canvas></div>
-      </div>
-
-      <!-- EXPENSE INPUT -->
-      <div class="exp-section">
-        <div class="exp-title">Input Expense Homecare</div>
-        <div class="exp-sub">Input expense per bulan. Data disimpan otomatis di browser.</div>
-        <div class="exp-period">
-          <div class="fg"><span class="fl">Bulan</span>
-            <select id="ebln">
-              <option>Jan</option><option>Feb</option><option>Mar</option><option>Apr</option>
-              <option>May</option><option>Jun</option><option>Jul</option><option>Aug</option>
-              <option>Sep</option><option>Oct</option><option>Nov</option><option>Dec</option>
-            </select>
-          </div>
-          <div class="fg"><span class="fl">Tahun</span>
-            <select id="ethn">
-              <option>2024</option><option>2025</option><option>2026</option>
-            </select>
-          </div>
-          <button class="exp-save" onclick="saveExpense()">Simpan</button>
-        </div>
-        <div class="exp-grid">
-          <div class="exp-field">
-            <span class="exp-label">Marketing</span>
-            <div class="exp-input-wrap"><span class="exp-prefix">Rp</span><input class="exp-input" id="e-marketing" type="number" placeholder="0"/></div>
-          </div>
-          <div class="exp-field">
-            <span class="exp-label">BHP</span>
-            <div class="exp-input-wrap"><span class="exp-prefix">Rp</span><input class="exp-input" id="e-bhp" type="number" placeholder="0"/></div>
-          </div>
-          <div class="exp-field">
-            <span class="exp-label">Equipment</span>
-            <div class="exp-input-wrap"><span class="exp-prefix">Rp</span><input class="exp-input" id="e-equipment" type="number" placeholder="0"/></div>
-          </div>
-          <div class="exp-field">
-            <span class="exp-label">Insentif</span>
-            <div class="exp-input-wrap"><span class="exp-prefix">Rp</span><input class="exp-input" id="e-insentif" type="number" placeholder="0"/></div>
-          </div>
-        </div>
-        <div class="exp-hist">
-          <div class="exp-hist-title">Riwayat Expense</div>
-          <div id="exp-hist-table"></div>
-        </div>
       </div>
 
       <div class="tw">
@@ -783,11 +739,9 @@ function dhc(){
     return r.isHC&&(!gv('fhpay')||r.payType===gv('fhpay'))&&(!gv('fhthn')||r.tahun===gv('fhthn'));
   });
   snap['hc']=data; aktif['hc']={};
-  drawProfitRow(data);
   drawStats('sthc',data);
   drawChart('chhc','leghc','cthc','hc',data);
   drawTable('tbhc','tchc',data,false);
-  renderExpenseHistory();
 }
 
 // ════════════════════════════════════════
@@ -948,7 +902,7 @@ function setMode(tab,mode,btn){
 // ════════════════════════════════════════
 // CHART
 // ════════════════════════════════════════
-function drawChart(canvasId,legId,titleId,tab,data){
+function drawChart(canvasId,legId,titleId,tab,data,filteredForScale){
   var bmap={};
   data.forEach(function(r){
     if(!r.bulan)return;
@@ -959,14 +913,20 @@ function drawChart(canvasId,legId,titleId,tab,data){
   var sorted=Object.keys(bmap).sort(function(a,b){return bmap[a].bs-bmap[b].bs;});
   var ak=aktif[tab]; var hasF=Object.keys(ak).length>0;
   var mode=modes[tab]||'kunjungan';
+  // Use filtered data for Y-axis max if provided
+  var scaleData = filteredForScale || data;
 
   var datasets,tickCb,tipCb;
   if(mode==='kunjungan'){
     datasets=CATK.map(function(k){
       var on=!hasF||ak[k];
-      return{label:CATS[k].l,data:sorted.map(function(b){return bmap[b][k]||0;}),
-        backgroundColor:on?CATS[k].c+'AA':CATS[k].c+'18',
-        borderColor:on?CATS[k].c:CATS[k].c+'20',borderWidth:1.5,borderRadius:3};
+      // If filtered out, use null data so Chart.js ignores in Y-axis calc
+      return{label:CATS[k].l,
+        data:sorted.map(function(b){ return on ? (bmap[b][k]||0) : null; }),
+        backgroundColor:CATS[k].c+'AA',
+        borderColor:CATS[k].c,
+        borderWidth:1.5,borderRadius:3,
+        hidden:!on};
     });
     tickCb=function(v){return v;};
     tipCb=function(ctx){return ' '+ctx.dataset.label+': '+N(ctx.parsed.y);};
@@ -993,7 +953,7 @@ function drawChart(canvasId,legId,titleId,tab,data){
     }},
     scales:{
       x:{stacked:false,ticks:{color:'#5A7A9A',font:{size:11,family:'JetBrains Mono'}},grid:{color:'rgba(42,64,96,0.5)'},border:{color:'#2A4060'}},
-      y:{stacked:false,ticks:{color:'#5A7A9A',font:{size:11},callback:tickCb},grid:{color:'rgba(42,64,96,0.5)'},border:{color:'#2A4060'},grace:'15%'}
+      y:{stacked:false,ticks:{color:'#5A7A9A',font:{size:11},callback:tickCb},grid:{color:'rgba(42,64,96,0.5)'},border:{color:'#2A4060'},beginAtZero:true,grace:'10%'}
     }
   }});
 
@@ -1013,7 +973,8 @@ function drawChart(canvasId,legId,titleId,tab,data){
       if(ak2[k2])delete ak2[k2]; else ak2[k2]=true;
       var base=snap[t]; var hasF2=Object.keys(ak2).length>0;
       var filtered=hasF2?base.filter(function(r){return ak2[r.kat];}):base;
-      drawChart(t==='1hc'?'ch1hc':'chhc',t==='1hc'?'leg1hc':'leghc',t==='1hc'?'ct1hc':'cthc',t,base);
+      // Pass filtered data so Y-axis rescales to visible data only
+      drawChart(t==='1hc'?'ch1hc':'chhc',t==='1hc'?'leg1hc':'leghc',t==='1hc'?'ct1hc':'cthc',t,base,filtered);
       drawTable(t==='1hc'?'tb1hc':'tbhc',t==='1hc'?'tc1hc':'tchc',filtered,false);
     };
     legEl.appendChild(pill);
