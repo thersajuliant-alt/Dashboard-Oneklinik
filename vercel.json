@@ -1,5 +1,6 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/oneklinik_dashboard.html" }
+    { "source": "/", "destination": "/oneklinik_dashboard.html" },
+    { "source": "/homecare", "destination": "/homecare_dashboard.html" }
   ]
 }
